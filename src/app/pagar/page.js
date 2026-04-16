@@ -56,6 +56,10 @@ export default function Pagar() {
 
   async function confirmarPago() {
     if (!metodoSeleccionado || !propiedad) return;
+    if (!archivo) {
+      alert("Por favor adjunta el comprobante de pago");
+      return;
+    }
     setEnviando(true);
 
     let comprobanteUrl = null;

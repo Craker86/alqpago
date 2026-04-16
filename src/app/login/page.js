@@ -20,10 +20,28 @@ export default function Login() {
 
   // Funcion que se ejecuta al enviar el formulario
   async function handleSubmit(e) {
-    // Evita que la pagina se recargue (comportamiento por defecto de los formularios)
     e.preventDefault();
     setCargando(true);
     setMensaje("");
+
+    // VALIDACIONES
+    if (!email.trim()) {
+      setMensaje("Error: Ingresa tu correo electrónico");
+      setCargando(false);
+      return;
+    }
+
+    if (!email.includes("@") || !email.includes(".")) {
+      setMensaje("Error: El correo no es válido");
+      setCargando(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setMensaje("Error: La contraseña debe tener mínimo 6 caracteres");
+      setCargando(false);
+      return;
+    } 
 
     if (esRegistro) {
       // REGISTRO - crear cuenta nueva
@@ -33,7 +51,7 @@ export default function Login() {
       });
 
       if (error) {
-        setMensaje("Error: " + error.message);
+       setMensaje("Error: " + (error.message === "Invalid login credentials" ? "Correo o contraseña incorrectos" : error.message));
       } else {
         setMensaje("Cuenta creada. Revisa tu email para confirmar.");
       }
@@ -45,7 +63,7 @@ export default function Login() {
       });
 
       if (error) {
-        setMensaje("Error: " + error.message);
+      setMensaje("Error: " + (error.message === "Invalid login credentials" ? "Correo o contraseña incorrectos" : error.message));
       } else {
         // Si el login fue exitoso, ir a la pantalla principal
         router.push("/dashboard");
