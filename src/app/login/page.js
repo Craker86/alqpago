@@ -48,7 +48,7 @@ export default function Login() {
         setMensaje("Error: " + error.message);
       } else {
         // Si el login fue exitoso, ir a la pantalla principal
-        router.push("/");
+        router.push("/dashboard");
       }
     }
 
