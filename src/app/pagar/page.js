@@ -98,6 +98,17 @@ export default function Pagar() {
     if (error) {
       alert("Error al registrar el pago: " + error.message);
     } else {
+      // Enviar notificacion al propietario
+      await fetch("/api/notificar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          monto: propiedad.monto_mensual,
+          metodo: metodo.nombre,
+          fecha: new Date().toLocaleDateString("es-VE"),
+          emailPropietario: "jesusalcala86@gmail.com",
+        }),
+      });
       setReferencia("ALQ-" + Date.now().toString().slice(-8));
       setPagoExitoso(true);
     }
