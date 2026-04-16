@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
     <meta name="theme-color" content="#065f46" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  </head><script dangerouslySetInnerHTML={{__html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`}} />
+  </head>
       <body className="min-h-full flex flex-col font-sans">
 
         {/* CONTENIDO DE LA PAGINA - cada page.js se renderiza aqui */}

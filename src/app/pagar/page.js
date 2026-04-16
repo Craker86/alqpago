@@ -82,8 +82,10 @@ export default function Pagar() {
 
     const metodo = metodos.find(m => m.id === metodoSeleccionado);
 
+   const { data: { session } } = await supabase.auth.getSession();
     const { error } = await supabase.from("pagos").insert({
       propiedad_id: propiedad.id,
+      user_id: session.user.id,
       monto: propiedad.monto_mensual,
       monto_bs: propiedad.monto_mensual * 45.20,
       metodo: metodo.nombre,
