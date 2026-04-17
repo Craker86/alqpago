@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import Link from "next/link";
 
 export default function Propietario() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function Propietario() {
   const [cargando, setCargando] = useState(true);
   // Estado para contar pagos confirmados y pendientes
   const [stats, setStats] = useState({ confirmados: 0, pendientes: 0, total: 0 });
+  const [propiedades, setPropiedades] = useState([]);
 
   useEffect(() => {
     async function cargar() {
@@ -31,6 +33,11 @@ export default function Propietario() {
       const pendientes = (pagosData || []).filter(p => p.estado === "pendiente").length;
       const total = (pagosData || []).reduce((sum, p) => sum + Number(p.monto), 0);
       setStats({ confirmados, pendientes, total });
+      const { data: propsData } = await supabase
+        .from("propiedades")
+        .select("*")
+        .order("created_at", { ascending: false });
+      setPropiedades(propsData || []);
 
       setCargando(false);
     }
@@ -103,6 +110,37 @@ export default function Propietario() {
       </div>
 
       {/* LISTA DE PAGOS */}
+      <Link
+        href="/nueva-propiedad"
+        className="block w-full py-3 bg-emerald-700 text-white text-center rounded-xl font-semibold text-sm mt-4 hover:bg-emerald-800 transition-colors"
+      >
+        + Agregar propiedad
+      </Link>
+      {/* PROPIEDADES REGISTRADAS */}
+      {propiedades.length > 0 && (
+        <div className="mt-4">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Mis propiedades</h2>
+          <div className="flex flex-col gap-2">
+            {propiedades.map((prop) => (
+              <div key={prop.id} className="bg-white border border-gray-200 rounded-xl p-4">
+                <p className="text-sm font-semibold text-gray-900">{prop.nombre}</p>
+                <p className="text-xs text-gray-500 mt-1">{prop.direccion}</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs font-bold text-emerald-700">${prop.monto_mensual}/mes</span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md font-medium">Corte día {prop.dia_corte}</span>
+                </div>
+                {prop.fotos && prop.fotos.length > 0 && (
+                  <div className="flex gap-2 mt-3">
+                    {prop.fotos.map((foto, i) => (
+                      <img key={i} src={foto} alt="Propiedad" className="w-16 h-16 object-cover rounded-lg" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <h2 className="text-sm font-semibold text-gray-900 mt-6 mb-3">Pagos recibidos</h2>
 
       <div className="flex flex-col gap-3">
