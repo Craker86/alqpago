@@ -22,9 +22,9 @@ export default function NavBar() {
           <span className="text-lg">💰</span>
           <span className="text-[10px] font-medium">Pagar</span>
         </Link>
-        <Link href="/contrato" className={`flex flex-col items-center gap-1 ${pathname === "/contrato" ? "text-emerald-700" : "text-gray-400"}`}>
-          <span className="text-lg">📄</span>
-          <span className="text-[10px] font-medium">Contrato</span>
+        <Link href="/propiedades" className={`flex flex-col items-center gap-1 ${pathname === "/propiedades" ? "text-emerald-700" : "text-gray-400"}`}>
+          <span className="text-lg">🏘️</span>
+          <span className="text-[10px] font-medium">Explorar</span>
         </Link>
         <Link href="/perfil" className={`flex flex-col items-center gap-1 ${pathname === "/perfil" ? "text-emerald-700" : "text-gray-400"}`}>
           <span className="text-lg">👤</span>
