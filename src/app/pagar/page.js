@@ -16,6 +16,9 @@ export default function Pagar() {
   // NUEVO: estado para el archivo del comprobante
   const [archivo, setArchivo] = useState(null);
   const [previsualizacion, setPrevisualizacion] = useState(null);
+  const [refPago, setRefPago] = useState("");
+  const [bancoOrigen, setBancoOrigen] = useState("");
+  const [cedulaPago, setCedulaPago] = useState("");
 
   const metodos = [
     { id: "pago-movil", nombre: "Pago móvil", detalle: "Banesco · 0412-XXX-XX45", tag: "Instantáneo", tagColor: "bg-emerald-100 text-emerald-800" },
@@ -93,10 +96,11 @@ export default function Pagar() {
       monto: propiedad.monto_mensual,
       monto_bs: propiedad.monto_mensual * 45.20,
       metodo: metodo.nombre,
-      referencia: "REF-" + Date.now(),
+      referencia: refPago || "REF-" + Date.now(),
       estado: "pendiente",
       fecha_pago: new Date().toISOString().split("T")[0],
       comprobante_url: comprobanteUrl,
+     notas: metodoSeleccionado === "pago-movil" ? "Banco: " + bancoOrigen + " | Cédula: " + cedulaPago : null,
     });
 
     if (error) {
@@ -208,6 +212,37 @@ export default function Pagar() {
       </div>
 
       {/* NUEVO: SECCION DE COMPROBANTE */}
+      {/* DATOS DEL PAGO MOVIL */}
+      {metodoSeleccionado === "pago-movil" && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 mt-4 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-900">Datos del pago móvil</h2>
+          <div>
+            <label className="text-xs font-medium text-gray-700 block mb-1">Últimos 4 dígitos de la referencia</label>
+            <input type="text" value={refPago} onChange={(e) => setRefPago(e.target.value)} maxLength="4" placeholder="Ej:3045" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-700 block mb-1">Banco origen</label>
+            <select value={bancoOrigen} onChange={(e) => setBancoOrigen(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 bg-white">
+              <option value="">Selecciona tu banco</option>
+              <option value="Banco de Venezuela">Banco de Venezuela</option>
+              <option value="Banesco">Banesco</option>
+              <option value="Mercantil">Mercantil</option>
+              <option value="Provincial">Provincial</option>
+              <option value="BNC">Banco Nacional de Crédito</option>
+              <option value="Bancamiga">Bancamiga</option>
+              <option value="Bancaribe">Bancaribe</option>
+              <option value="Exterior">Banco Exterior</option>
+              <option value="Venezuela">Banco Venezolano de Crédito</option>
+              <option value="Bicentenario">Bicentenario</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-700 block mb-1">Cédula de identidad</label>
+            <input type="text" value={cedulaPago} onChange={(e) => setCedulaPago(e.target.value)} placeholder="Ej: V-25432108" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+      )}
       <h2 className="text-sm font-semibold text-gray-900 mt-6 mb-3">Adjuntar comprobante</h2>
 
       <div className="bg-white border border-gray-200 rounded-xl p-4">

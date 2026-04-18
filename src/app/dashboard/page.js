@@ -40,6 +40,15 @@ const { data: tasaData } = await supabase
         .limit(1)
         .single();
       if (tasaData) setTasa(tasaData.tasa);
+      // Buscar propiedad vinculada del inquilino
+      const { data: vinculacion } = await supabase
+        .from("vinculaciones")
+        .select("*, propiedades(*)")
+        .eq("inquilino_id", session.user.id)
+        .eq("estado", "activo")
+        .limit(1)
+        .single();
+      if (vinculacion) setPropiedad(vinculacion.propiedades);
       setPropiedad(prop);
       setPagos(pagosData || []);
       setCargando(false);
@@ -96,6 +105,11 @@ const { data: tasaData } = await supabase
           </p>
         </div>
       </div>
+
+      <Link href="/vincular" className="block bg-white border border-dashed border-emerald-300 rounded-xl p-4 mt-3 text-center hover:bg-emerald-50 transition-colors">
+        <span className="text-sm font-semibold text-emerald-700">+ Vincular nueva propiedad</span>
+        <span className="text-xs text-gray-500 mt-0.5 block">Ingresa el código de tu propietario</span>
+      </Link>
 
       <div className="flex justify-between items-center mt-6 mb-3">
         <h2 className="text-sm font-semibold text-gray-900">Pagar con</h2>

@@ -35,7 +35,7 @@ export default function Propietario() {
       setStats({ confirmados, pendientes, total });
       const { data: propsData } = await supabase
         .from("propiedades")
-        .select("*")
+        .select("*, vinculaciones(*)")
         .order("created_at", { ascending: false });
       setPropiedades(propsData || []);
 
@@ -120,7 +120,7 @@ export default function Propietario() {
       {propiedades.length > 0 && (
         <div className="mt-4">
           <h2 className="text-sm font-semibold text-gray-900 mb-3">Mis propiedades</h2>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 ">
             {propiedades.map((prop) => (
               <div key={prop.id} className="bg-white border border-gray-200 rounded-xl p-4">
                 <p className="text-sm font-semibold text-gray-900">{prop.nombre}</p>
@@ -128,6 +128,23 @@ export default function Propietario() {
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-xs font-bold text-emerald-700">${prop.monto_mensual}/mes</span>
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md font-medium">Corte día {prop.dia_corte}</span>
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-[10px] text-gray-500">Código para tu inquilino:</p>
+                  <p className="text-lg font-bold text-emerald-700 tracking-widest mt-1">{prop.codigo_invitacion}</p>
+                  <p className="text-[10px] text-gray-400 mt-1">Comparte este código con tu inquilino para vincularse</p>
+                </div>
+                {prop.vinculaciones && prop.vinculaciones.length > 0 && (
+                  <div className="mt-2 p-3 bg-emerald-50 rounded-lg">
+                    <p className="text-[10px] text-gray-500">Inquilinos vinculados:</p>
+                    {prop.vinculaciones.map((v) => (
+                      <div key={v.id} className="flex items-center gap-2 mt-2">
+                        <div className="w-6 h-6 bg-emerald-200 rounded-full flex items-center justify-center text-[10px] font-bold text-emerald-800">I</div>
+                        <span className="text-xs font-medium text-emerald-800">{v.inquilino_id.substring(0, 8)}...</span>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md">{v.estado}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 </div>
                 {prop.fotos && prop.fotos.length > 0 && (
                   <div className="flex gap-2 mt-3">
