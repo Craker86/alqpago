@@ -11,6 +11,7 @@ export default function Propiedades() {
   const [cargando, setCargando] = useState(true);
   const [filtro, setFiltro] = useState("todas");
   const [busqueda, setBusqueda] = useState("");
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
 
   useEffect(() => {
     async function cargar() {
@@ -36,7 +37,6 @@ export default function Propiedades() {
     );
   }
 
-  // Filtrar propiedades por busqueda y rango de precio
   const propiedadesFiltradas = propiedades.filter((prop) => {
     const coincideBusqueda = prop.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       prop.direccion.toLowerCase().includes(busqueda.toLowerCase());
@@ -56,7 +56,6 @@ export default function Propiedades() {
         {propiedades.length} disponibles en Venezuela
       </p>
 
-      {/* BARRA DE BUSQUEDA */}
       <div className="mt-4">
         <input
           type="text"
@@ -67,7 +66,6 @@ export default function Propiedades() {
         />
       </div>
 
-      {/* FILTROS DE PRECIO */}
       <div className="flex gap-2 mt-3 overflow-x-auto">
         {[
           { id: "todas", label: "Todas" },
@@ -89,7 +87,6 @@ export default function Propiedades() {
         ))}
       </div>
 
-      {/* LISTA DE PROPIEDADES */}
       <div className="flex flex-col gap-3 mt-4">
         {propiedadesFiltradas.length === 0 ? (
           <div className="text-center py-8">
@@ -99,12 +96,12 @@ export default function Propiedades() {
           propiedadesFiltradas.map((prop) => (
             <div key={prop.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
 
-              {/* FOTO DE LA PROPIEDAD */}
               {prop.fotos && prop.fotos.length > 0 ? (
                 <img
                   src={prop.fotos[0]}
                   alt={prop.nombre}
-                  className="w-full h-40 object-cover"
+                  className="w-full h-40 object-cover cursor-pointer"
+                  onClick={() => setFotoAmpliada(prop.fotos[0])}
                 />
               ) : (
                 <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
@@ -112,7 +109,6 @@ export default function Propiedades() {
                 </div>
               )}
 
-              {/* INFO */}
               <div className="p-4">
                 <div className="flex justify-between items-start">
                   <div>
@@ -125,7 +121,6 @@ export default function Propiedades() {
                   </div>
                 </div>
 
-                {/* DETALLES */}
                 <div className="flex gap-2 mt-3">
                   <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
                     Corte día {prop.dia_corte}
@@ -135,7 +130,25 @@ export default function Propiedades() {
                   </span>
                 </div>
 
-                {/* PROPIETARIO */}
+                {prop.descripcion && (
+                  <p className="text-xs text-gray-600 mt-3 leading-relaxed">{prop.descripcion}</p>
+                )}
+
+                {prop.requisitos && (
+                  <div className="mt-3 p-3 bg-amber-50 rounded-lg">
+                    <p className="text-[10px] font-semibold text-amber-800">Requisitos:</p>
+                    <p className="text-xs text-amber-700 mt-1 leading-relaxed">{prop.requisitos}</p>
+                  </div>
+                )}
+
+                {prop.fotos && prop.fotos.length > 1 && (
+                  <div className="flex gap-2 mt-3 overflow-x-auto">
+                    {prop.fotos.map((foto, i) => (
+                      <img key={i} src={foto} alt={prop.nombre} className="w-20 h-20 object-cover rounded-lg flex-shrink-0 cursor-pointer" onClick={() => setFotoAmpliada(foto)} />
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                   <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-[10px] font-bold text-emerald-800">
                     {prop.propietario_nombre ? prop.propietario_nombre[0] : "P"}
@@ -143,12 +156,29 @@ export default function Propiedades() {
                   <span className="text-xs text-gray-500">{prop.propietario_nombre}</span>
                 </div>
 
-               <a href={"https://wa.me/" + (prop.telefono || "") + "?text=Hola, vi tu propiedad " + prop.nombre + " en Rentto y me interesa."} target="_blank" className="block w-full py-2.5 mt-3 bg-emerald-700 text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 text-center">Contactar por WhatsApp</a>
+                <a href={"https://wa.me/" + (prop.telefono || "") + "?text=Hola, vi tu propiedad " + prop.nombre + " en Rentto y me interesa."} target="_blank" className="block w-full py-2.5 mt-3 bg-emerald-700 text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 text-center">Contactar por WhatsApp</a>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {fotoAmpliada && (
+        <div
+          onClick={() => setFotoAmpliada(null)}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 cursor-pointer"
+        >
+          <div className="relative max-w-lg w-full">
+            <img src={fotoAmpliada} alt="Foto ampliada" className="w-full rounded-2xl" />
+            <button
+              onClick={() => setFotoAmpliada(null)}
+              className="absolute top-3 right-3 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center text-sm font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
