@@ -20,6 +20,8 @@ export default function NuevaPropiedad() {
   const [telefono, setTelefono] = useState("");
   const [fotos, setFotos] = useState([]);
   const [previews, setPreviews] = useState([]);
+  const [descripcion, setDescripcion] = useState("");
+  const [requisitos, setRequisitos] = useState("");
 
   async function guardarPropiedad() {
     setCargando(true);
@@ -80,8 +82,10 @@ export default function NuevaPropiedad() {
       monto_mensual: Number(monto),
       dia_corte: Number(diaCorte),
       fecha_fin_contrato: fechaFin || null,
-     clausula_ajuste: ajuste,
-     telefono: telefono,
+    clausula_ajuste: ajuste,
+      descripcion: descripcion,
+      requisitos: requisitos,
+      telefono: telefono,
       fotos: fotosUrls,
     });
 
@@ -204,6 +208,33 @@ export default function NuevaPropiedad() {
             <option value="Ajuste trimestral">Ajuste trimestral</option>
             <option value="Ajuste semestral">Ajuste semestral</option>
           </select>
+        </div>
+        {/* DESCRIPCION */}
+        <div>
+          <label className="text-xs font-medium text-gray-700 block mb-1">
+            Descripción de la propiedad
+          </label>
+          <textarea
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            placeholder="Ej: Apartamento amplio de 2 habitaciones, 1 baño, cocina equipada, balcón con vista a la montaña. Incluye puesto de estacionamiento."
+            rows="3"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 resize-none"
+          />
+        </div>
+
+        {/* REQUISITOS */}
+        <div>
+          <label className="text-xs font-medium text-gray-700 block mb-1">
+            Requisitos para el inquilino
+          </label>
+          <textarea
+            value={requisitos}
+            onChange={(e) => setRequisitos(e.target.value)}
+            placeholder="Ej: Persona sola o pareja sin mascotas. Depósito de 1 mes. Referencias personales. Contrato mínimo 6 meses."
+            rows="3"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 resize-none"
+          />
         </div>
         {/* FOTOS */}
         <div>
