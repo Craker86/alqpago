@@ -13,8 +13,8 @@ export default function Landing() {
               R
             </div>
             <span className="font-bold text-fg">rentto</span>
-            <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-pill font-medium">
-              Venezuela 🇻🇪
+            <span className="inline-flex items-center gap-1 text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-pill font-medium whitespace-nowrap w-fit">
+              Venezuela <FlagVE />
             </span>
           </div>
           <Link
@@ -33,16 +33,16 @@ export default function Landing() {
           <p className="text-base text-fg-muted mt-4 leading-relaxed">
             Publica, alquila y paga. 100% digital, 100% seguro.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
             <Link
               href="/propiedades"
-              className="flex-1 bg-brand-800 text-fg-inverse rounded-pill py-3.5 px-6 font-semibold text-sm shadow-card hover:bg-brand-900 transition text-center"
+              className="bg-brand-800 text-fg-inverse rounded-pill py-3.5 px-6 font-semibold text-sm shadow-card hover:bg-brand-900 transition text-center"
             >
               Buscar inmueble
             </Link>
             <Link
               href="/login?rol=propietario"
-              className="flex-1 border border-brand-800 text-brand-800 rounded-pill py-3.5 px-6 font-semibold text-sm hover:bg-brand-50 transition text-center"
+              className="border border-brand-800 text-brand-800 rounded-pill py-3.5 px-6 font-semibold text-sm hover:bg-brand-50 transition text-center"
             >
               Publicar mi inmueble
             </Link>
@@ -82,12 +82,17 @@ export default function Landing() {
         </section>
 
         {/* Footer */}
-        <footer className="py-8 border-t border-stroke text-center">
-          <p className="text-sm text-fg-muted">Rentto · Hecho en Venezuela 🇻🇪</p>
-          <div className="flex justify-center gap-4 mt-3 text-xs text-fg-subtle">
-            <Link href="/terminos" className="hover:text-fg-muted transition">Términos</Link>
-            <Link href="/privacidad" className="hover:text-fg-muted transition">Privacidad</Link>
-            <Link href="/contacto" className="hover:text-fg-muted transition">Contacto</Link>
+        <hr className="border-stroke my-12" />
+        <footer className="py-8 text-center">
+          <p className="inline-flex items-center justify-center gap-1 text-sm text-fg-muted">
+            Rentto · Hecho en Venezuela <FlagVE />
+          </p>
+          <div className="flex justify-center items-center gap-2 mt-3 text-sm text-fg-muted">
+            <a href="#" className="hover:text-brand-700 transition">Términos</a>
+            <span aria-hidden="true">·</span>
+            <a href="#" className="hover:text-brand-700 transition">Privacidad</a>
+            <span aria-hidden="true">·</span>
+            <a href="#" className="hover:text-brand-700 transition">Contacto</a>
           </div>
         </footer>
 
@@ -116,5 +121,21 @@ function Step({ n, children }) {
       </div>
       <p className="text-fg pt-1">{children}</p>
     </div>
+  );
+}
+
+function FlagVE({ className = "" }) {
+  return (
+    <svg
+      width="16"
+      height="11"
+      viewBox="0 0 22 15"
+      aria-label="Bandera de Venezuela"
+      className={`inline-block rounded-[2px] flex-shrink-0 ${className}`}
+    >
+      <rect width="22" height="5" fill="#FCD116" />
+      <rect y="5" width="22" height="5" fill="#00247D" />
+      <rect y="10" width="22" height="5" fill="#CF142B" />
+    </svg>
   );
 }
