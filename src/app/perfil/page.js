@@ -4,6 +4,18 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
+import {
+  User,
+  CreditCard,
+  FileText,
+  Receipt,
+  Bell,
+  Lock,
+  Settings,
+  ChevronRight,
+  ArrowRight,
+  LogOut,
+} from "lucide-react";
 
 export default function Perfil() {
   const router = useRouter();
@@ -12,12 +24,13 @@ export default function Perfil() {
   const [rol, setRol] = useState("");
 
   const opciones = [
-    { icono: "👤", nombre: "Datos personales", color: "bg-blue-100", ruta: "/datos-personales" },
-    { icono: "💳", nombre: "Métodos de pago", color: "bg-emerald-100", ruta: "/metodos-pago" },
-    { icono: "📄", nombre: "Recibos y facturas", color: "bg-amber-100", ruta: "/recibos" },
-    { icono: "🔔", nombre: "Notificaciones", color: "bg-pink-100", ruta: "/notificaciones" },
-    { icono: "🔒", nombre: "Seguridad", color: "bg-purple-100", ruta: "/seguridad" },
-    { icono: "⚙️", nombre: "Configuración", color: "bg-gray-100", ruta: "/configuracion" },
+    { Icon: User, nombre: "Datos personales", ruta: "/datos-personales" },
+    { Icon: FileText, nombre: "Contratos", ruta: "/contrato" },
+    { Icon: CreditCard, nombre: "Métodos de pago", ruta: "/metodos-pago" },
+    { Icon: Receipt, nombre: "Recibos y facturas", ruta: "/recibos" },
+    { Icon: Bell, nombre: "Notificaciones", ruta: "/notificaciones" },
+    { Icon: Lock, nombre: "Seguridad", ruta: "/seguridad" },
+    { Icon: Settings, nombre: "Configuración", ruta: "/configuracion" },
   ];
 
   useEffect(() => {
@@ -31,8 +44,11 @@ export default function Perfil() {
         creado: new Date(session.user.created_at).toLocaleDateString("es-VE"),
       });
 
-      const { data: perfil } = await supabase.from("perfiles").select("rol").eq("id", session.user.id).single();
-      if (perfil) setRol(perfil.rol);
+      const { data: perfil } = await supabase.from("perfiles").select("rol, nombre").eq("id", session.user.id).single();
+      if (perfil) {
+        setRol(perfil.rol);
+        if (perfil.nombre) setUsuario((prev) => ({ ...prev, nombre: perfil.nombre }));
+      }
 
       setCargando(false);
     }
@@ -46,76 +62,75 @@ export default function Perfil() {
 
   if (cargando) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Cargando...</p>
+      <div className="min-h-screen bg-surface-muted flex items-center justify-center">
+        <p className="text-fg-subtle text-sm">Cargando…</p>
       </div>
     );
   }
 
-  const nombre = usuario.email.split("@")[0];
+  const nombre = usuario.nombre || usuario.email.split("@")[0];
   const iniciales = nombre.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 max-w-md mx-auto">
+    <div className="min-h-screen bg-surface-muted pb-24">
+      <div className="max-w-[480px] mx-auto px-5">
 
-      <div className="text-center mt-4">
-        <div className="w-20 h-20 bg-emerald-700 text-white rounded-full flex items-center justify-center text-3xl font-bold mx-auto">
-          {iniciales}
-        </div>
-        <p className="text-lg font-semibold text-gray-900 mt-3">{nombre}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{usuario.email}</p>
-        <span className="text-[10px] bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-medium mt-2 inline-block">
-          {rol === "propietario" ? "Propietario" : "Inquilino"}
-        </span>
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 mt-6">
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-500">Email</span>
-            <span className="text-xs font-medium text-emerald-700">{usuario.email}</span>
+        <section className="text-center pt-6">
+          <div className="w-20 h-20 bg-brand-800 text-fg-inverse rounded-pill flex items-center justify-center text-3xl font-bold mx-auto shadow-card">
+            {iniciales}
           </div>
+          <h1 className="text-lg font-semibold text-fg mt-3">{nombre}</h1>
+          <p className="text-xs text-fg-muted mt-0.5">{usuario.email}</p>
+          <span className="inline-flex items-center mt-2 text-[10px] bg-brand-50 text-brand-700 px-3 py-1 rounded-pill font-semibold">
+            {rol === "propietario" ? "Propietario" : "Inquilino"}
+          </span>
+        </section>
+
+        <div className="bg-surface border border-stroke rounded-card p-4 mt-6 shadow-card">
           <div className="flex justify-between">
-            <span className="text-xs text-gray-500">Miembro desde</span>
-            <span className="text-xs font-medium text-gray-900">{usuario.creado}</span>
+            <span className="text-xs text-fg-muted">Email</span>
+            <span className="text-xs font-semibold text-brand-700 truncate ml-3">{usuario.email}</span>
+          </div>
+          <div className="flex justify-between mt-3">
+            <span className="text-xs text-fg-muted">Miembro desde</span>
+            <span className="text-xs font-semibold text-fg">{usuario.creado}</span>
           </div>
         </div>
-      </div>
 
-      <div className="mt-6">
-        {opciones.map((opcion) => (
+        <nav className="bg-surface border border-stroke rounded-card mt-6 shadow-card overflow-hidden divide-y divide-stroke">
+          {opciones.map(({ Icon, nombre, ruta }) => (
+            <Link
+              href={ruta}
+              key={nombre}
+              className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-subtle transition"
+            >
+              <div className="w-9 h-9 bg-brand-50 rounded-pill flex items-center justify-center flex-shrink-0">
+                <Icon size={16} className="text-brand-700" strokeWidth={2.25} />
+              </div>
+              <span className="flex-1 text-sm font-medium text-fg">{nombre}</span>
+              <ChevronRight size={16} className="text-fg-subtle" strokeWidth={2} />
+            </Link>
+          ))}
+        </nav>
+
+        {rol === "propietario" && (
           <Link
-            href={opcion.ruta}
-            key={opcion.nombre}
-            className="flex items-center gap-3 py-3.5 border-b border-gray-100 cursor-pointer"
+            href="/propietario"
+            className="flex items-center justify-center gap-2 w-full py-3 mt-6 text-sm text-brand-700 font-semibold border border-brand-200 rounded-pill hover:bg-brand-50 transition"
           >
-            <div className={`w-9 h-9 ${opcion.color} rounded-xl flex items-center justify-center text-base`}>
-              {opcion.icono}
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900">
-              {opcion.nombre}
-            </span>
-            <span className="text-gray-400 text-sm">›</span>
+            Panel del propietario <ArrowRight size={14} strokeWidth={2.5} />
           </Link>
-        ))}
-      </div>
+        )}
 
-      {rol === "propietario" && (
-        <Link
-          href="/propietario"
-          className="block w-full py-3 mt-6 text-sm text-center text-emerald-700 font-medium border border-emerald-200 rounded-xl hover:bg-emerald-50 transition-colors"
+        <button
+          onClick={cerrarSesion}
+          className="flex items-center justify-center gap-2 w-full py-3 mt-3 text-sm text-danger-600 font-semibold border border-danger-100 rounded-pill hover:bg-danger-100 transition"
         >
-          Panel del propietario →
-        </Link>
-      )}
+          <LogOut size={14} strokeWidth={2.5} />
+          Cerrar sesión
+        </button>
 
-      <button
-        onClick={cerrarSesion}
-        className="w-full py-3 mt-6 text-sm text-red-500 font-medium border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
-      >
-        Cerrar sesión
-      </button>
-
+      </div>
     </div>
   );
 }

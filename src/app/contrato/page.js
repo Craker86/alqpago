@@ -3,26 +3,58 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import { Trophy, TrendingUp, Home, Calendar, User, FileText, AlertCircle } from "lucide-react";
 
 export default function Contrato() {
   const router = useRouter();
+  const [rol, setRol] = useState(null);
+  const [cargando, setCargando] = useState(true);
   const [propiedad, setPropiedad] = useState(null);
   const [pagos, setPagos] = useState([]);
-  const [cargando, setCargando] = useState(true);
+  const [contratos, setContratos] = useState([]);
 
   useEffect(() => {
     async function cargar() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push("/login"); return; }
 
-      const { data: prop } = await supabase
-        .from("propiedades").select("*").limit(1).single();
+      const { data: perfil } = await supabase
+        .from("perfiles")
+        .select("rol")
+        .eq("id", session.user.id)
+        .single();
+      const currentRol = perfil?.rol || "inquilino";
+      setRol(currentRol);
 
-      const { data: pagosData } = await supabase
-        .from("pagos").select("*").eq("estado", "confirmado");
+      if (currentRol === "propietario") {
+        const { data: props } = await supabase
+          .from("propiedades")
+          .select("*, vinculaciones(*)")
+          .order("created_at", { ascending: false });
 
-      setPropiedad(prop);
-      setPagos(pagosData || []);
+        const todas = (props || []).flatMap((p) =>
+          (p.vinculaciones || []).map((v) => ({ ...v, propiedad: p }))
+        );
+
+        const ids = [...new Set(todas.map((v) => v.inquilino_id))];
+        let inquilinosPorId = {};
+        if (ids.length > 0) {
+          const { data: perfiles } = await supabase
+            .from("perfiles")
+            .select("id, nombre")
+            .in("id", ids);
+          (perfiles || []).forEach((p) => { inquilinosPorId[p.id] = p; });
+        }
+        setContratos(todas.map((v) => ({ ...v, inquilino: inquilinosPorId[v.inquilino_id] || null })));
+      } else {
+        const { data: prop } = await supabase
+          .from("propiedades").select("*").limit(1).single();
+        const { data: pagosData } = await supabase
+          .from("pagos").select("*").eq("estado", "confirmado");
+        setPropiedad(prop);
+        setPagos(pagosData || []);
+      }
+
       setCargando(false);
     }
     cargar();
@@ -30,117 +62,209 @@ export default function Contrato() {
 
   if (cargando) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Cargando...</p>
+      <div className="min-h-screen bg-surface-muted flex items-center justify-center">
+        <p className="text-fg-subtle text-sm">Cargando…</p>
       </div>
     );
   }
 
-  // Calcular el score basado en pagos confirmados
-  // Cada pago confirmado suma 70 puntos, maximo 1000
+  if (rol === "propietario") {
+    return <VistaPropietario contratos={contratos} />;
+  }
+
+  return <VistaInquilino propiedad={propiedad} pagos={pagos} />;
+}
+
+function VistaPropietario({ contratos }) {
+  const activos = contratos.filter((c) => c.estado === "activo");
+
+  return (
+    <div className="min-h-screen bg-surface-muted pb-24">
+      <div className="max-w-[480px] mx-auto px-5">
+        <header className="pt-6 pb-4">
+          <h1 className="text-2xl font-bold text-fg">Contratos</h1>
+          <p className="text-sm text-fg-muted mt-1">
+            {contratos.length} {contratos.length === 1 ? "contrato" : "contratos"} · {activos.length} {activos.length === 1 ? "activo" : "activos"}
+          </p>
+        </header>
+
+        {contratos.length === 0 ? (
+          <div className="bg-surface rounded-card shadow-card p-10 text-center">
+            <div className="w-14 h-14 bg-brand-50 rounded-pill flex items-center justify-center mx-auto">
+              <FileText size={24} className="text-brand-300" strokeWidth={1.75} />
+            </div>
+            <p className="text-sm font-semibold text-fg mt-4">
+              No hay contratos aún
+            </p>
+            <p className="text-xs text-fg-muted mt-1 max-w-[260px] mx-auto leading-relaxed">
+              Cuando un inquilino se vincule a una de tus propiedades, aparecerá aquí.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {contratos.map((c) => (
+              <ContratoCardPropietario key={c.id} contrato={c} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContratoCardPropietario({ contrato }) {
+  const { propiedad, inquilino, estado, inquilino_id, created_at } = contrato;
+  const inquilinoNombre = inquilino?.nombre || `Inquilino ${inquilino_id.substring(0, 6)}…`;
+
+  const statusStyles = {
+    activo: "bg-success-100 text-success-600",
+    pendiente: "bg-warning-100 text-warning-700",
+    inactivo: "bg-surface-subtle text-fg-muted",
+  }[estado] || "bg-surface-subtle text-fg-muted";
+
+  return (
+    <article className="bg-surface rounded-card shadow-card p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-fg truncate">{propiedad?.nombre || "—"}</h3>
+          <p className="text-xs text-fg-muted mt-0.5 truncate">{propiedad?.direccion || "—"}</p>
+        </div>
+        <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-pill flex-shrink-0 ${statusStyles}`}>
+          {estado}
+        </span>
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-stroke space-y-2">
+        <Row icon={<User size={14} strokeWidth={2} />} label="Inquilino" value={inquilinoNombre} />
+        <Row
+          icon={<Home size={14} strokeWidth={2} />}
+          label="Renta"
+          value={propiedad?.monto_mensual ? `$${propiedad.monto_mensual} / mes` : "—"}
+          valueClass="text-brand-700 font-semibold"
+        />
+        <Row
+          icon={<Calendar size={14} strokeWidth={2} />}
+          label="Desde"
+          value={created_at ? new Date(created_at).toLocaleDateString("es-VE", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+        />
+        <Row
+          icon={<FileText size={14} strokeWidth={2} />}
+          label="Cláusula"
+          value={propiedad?.clausula_ajuste || "—"}
+        />
+      </div>
+    </article>
+  );
+}
+
+function Row({ icon, label, value, valueClass = "text-fg" }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="inline-flex items-center gap-1.5 text-xs text-fg-muted">
+        <span className="text-fg-subtle">{icon}</span>
+        {label}
+      </span>
+      <span className={`text-xs font-medium text-right truncate ${valueClass}`}>{value}</span>
+    </div>
+  );
+}
+
+function VistaInquilino({ propiedad, pagos }) {
   const pagosConfirmados = pagos.length;
   const score = Math.min(pagosConfirmados * 70 + 200, 1000);
   const scoreTexto = score >= 800 ? "Excelente" : score >= 600 ? "Bueno" : score >= 400 ? "Regular" : "En construcción";
   const scorePorcentaje = score / 10;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 max-w-md mx-auto">
+    <div className="min-h-screen bg-surface-muted pb-24">
+      <div className="max-w-[480px] mx-auto px-5">
+        <header className="pt-6 pb-4">
+          <h1 className="text-2xl font-bold text-fg">Mi alquiler</h1>
+          <div className="inline-flex items-center gap-2 bg-success-100 text-success-600 px-3 py-1 rounded-pill text-xs font-semibold mt-3">
+            <span className="w-1.5 h-1.5 rounded-pill bg-success-600" />
+            Contrato activo
+          </div>
+        </header>
 
-      <h1 className="text-2xl font-bold text-gray-900">Mi alquiler</h1>
-
-      <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 px-4 py-1.5 rounded-full text-xs font-medium mt-3">
-        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-        Contrato activo
-      </div>
-
-      {propiedad && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 mt-4">
-          <p className="font-semibold text-gray-900">{propiedad.nombre}</p>
-          <div className="mt-3 space-y-3">
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-500">Dirección</span>
-              <span className="text-xs font-medium text-gray-900">{propiedad.direccion}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-500">Propietario</span>
-              <span className="text-xs font-medium text-gray-900">{propiedad.propietario_nombre}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-500">Monto mensual</span>
-              <span className="text-xs font-bold text-emerald-700">${propiedad.monto_mensual} / mes</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-500">Día de corte</span>
-              <span className="text-xs font-medium text-gray-900">{propiedad.dia_corte} de cada mes</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-500">Contrato hasta</span>
-              <span className="text-xs font-medium text-gray-900">
-                {propiedad.fecha_fin_contrato
+        {propiedad && (
+          <div className="bg-surface rounded-card shadow-card p-4">
+            <p className="font-semibold text-fg">{propiedad.nombre}</p>
+            <div className="mt-3 pt-3 border-t border-stroke space-y-2">
+              <Row icon={<Home size={14} strokeWidth={2} />} label="Dirección" value={propiedad.direccion} />
+              <Row icon={<User size={14} strokeWidth={2} />} label="Propietario" value={propiedad.propietario_nombre || "—"} />
+              <Row
+                icon={<FileText size={14} strokeWidth={2} />}
+                label="Monto mensual"
+                value={`$${propiedad.monto_mensual} / mes`}
+                valueClass="text-brand-700 font-semibold"
+              />
+              <Row icon={<Calendar size={14} strokeWidth={2} />} label="Día de corte" value={`${propiedad.dia_corte} de cada mes`} />
+              <Row
+                icon={<Calendar size={14} strokeWidth={2} />}
+                label="Contrato hasta"
+                value={propiedad.fecha_fin_contrato
                   ? new Date(propiedad.fecha_fin_contrato).toLocaleDateString("es-VE", { month: "long", year: "numeric" })
                   : "Sin fecha"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-500">Cláusula de ajuste</span>
-              <span className="text-xs font-medium text-gray-900">{propiedad.clausula_ajuste}</span>
+              />
+              <Row icon={<AlertCircle size={14} strokeWidth={2} />} label="Cláusula de ajuste" value={propiedad.clausula_ajuste || "—"} />
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <h2 className="text-sm font-semibold text-gray-900 mt-6 mb-3">Reputación de pago</h2>
+        <h2 className="text-sm font-semibold text-fg mt-6 mb-3">Reputación de pago</h2>
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-4">
-        <div className="relative w-16 h-16 flex-shrink-0">
-          <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke="#e5e7eb" strokeWidth="3" />
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke="#059669" strokeWidth="3"
-              strokeDasharray={`${scorePorcentaje} 100`} strokeLinecap="round" />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-lg font-bold text-emerald-800">{score}</span>
-          </div>
-        </div>
-        <div>
-          <p className="font-semibold text-emerald-800">{scoreTexto}</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {pagosConfirmados} pagos confirmados
-          </p>
-          <p className="text-xs text-emerald-600 font-medium mt-1">
-            +70 pts por cada pago puntual
-          </p>
-        </div>
-      </div>
-
-      {score >= 600 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 mt-3 flex items-center gap-3">
-          <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-lg">
-            🏆
+        <div className="bg-surface rounded-card shadow-card p-4 flex items-center gap-4">
+          <div className="relative w-16 h-16 flex-shrink-0">
+            <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-surface-subtle)" strokeWidth="3" />
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-brand-600)" strokeWidth="3"
+                strokeDasharray={`${scorePorcentaje} 100`} strokeLinecap="round" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-bold text-brand-800">{score}</span>
+            </div>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Beneficio desbloqueado</p>
-            <p className="text-xs text-gray-500">Tu puntaje te da acceso a tasas preferenciales en seguros de hogar</p>
+            <p className="font-semibold text-brand-800">{scoreTexto}</p>
+            <p className="text-xs text-fg-muted mt-0.5">
+              {pagosConfirmados} {pagosConfirmados === 1 ? "pago confirmado" : "pagos confirmados"}
+            </p>
+            <p className="text-xs text-brand-600 font-semibold mt-1">
+              +70 pts por cada pago puntual
+            </p>
           </div>
         </div>
-      )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mt-3 flex items-center gap-3">
-        <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-lg">
-          📊
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-900">
-            {score >= 800 ? "Score máximo alcanzado" : "Tu score está subiendo"}
-          </p>
-          <p className="text-xs text-gray-500">
-            {score >= 800
-              ? "Mantén tus pagos puntuales para conservar tu nivel"
-              : `Te faltan ${Math.ceil((800 - score) / 70)} pagos más para nivel Excelente`}
-          </p>
+        {score >= 600 && (
+          <div className="bg-surface rounded-card shadow-card p-4 mt-3 flex items-center gap-3">
+            <div className="w-10 h-10 bg-warning-100 rounded-pill flex items-center justify-center flex-shrink-0">
+              <Trophy size={18} className="text-warning-700" strokeWidth={2.25} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-fg">Beneficio desbloqueado</p>
+              <p className="text-xs text-fg-muted mt-0.5">
+                Tu puntaje te da acceso a tasas preferenciales en seguros de hogar
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-surface rounded-card shadow-card p-4 mt-3 flex items-center gap-3">
+          <div className="w-10 h-10 bg-brand-50 rounded-pill flex items-center justify-center flex-shrink-0">
+            <TrendingUp size={18} className="text-brand-700" strokeWidth={2.25} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-fg">
+              {score >= 800 ? "Score máximo alcanzado" : "Tu score está subiendo"}
+            </p>
+            <p className="text-xs text-fg-muted mt-0.5">
+              {score >= 800
+                ? "Mantén tus pagos puntuales para conservar tu nivel"
+                : `Te faltan ${Math.ceil((800 - score) / 70)} pagos más para nivel Excelente`}
+            </p>
+          </div>
         </div>
       </div>
-
     </div>
   );
 }
