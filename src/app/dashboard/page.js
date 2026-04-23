@@ -11,6 +11,7 @@ export default function Home() {
   const [propiedad, setPropiedad] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [tasa, setTasa] = useState(0);
+  const [nombre, setNombre] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -19,6 +20,17 @@ export default function Home() {
       if (!session) {
         router.push("/login");
         return;
+      }
+
+      const { data: perfil } = await supabase
+        .from("perfiles")
+        .select("nombre")
+        .eq("id", session.user.id)
+        .single();
+      if (perfil?.nombre) {
+        setNombre(perfil.nombre);
+      } else if (session.user.email) {
+        setNombre(session.user.email.split("@")[0]);
       }
 
       const { data: prop } = await supabase
@@ -76,7 +88,9 @@ export default function Home() {
     <div className="min-h-screen bg-surface-muted pb-24">
       <div className="max-w-[480px] mx-auto px-5">
         <header className="pt-6 pb-4">
-          <h1 className="text-2xl font-bold text-fg">Hola, Jesús</h1>
+          <h1 className="text-2xl font-bold text-fg">
+            Hola{nombre ? `, ${nombre.split(" ")[0]}` : ""}
+          </h1>
           <p className="text-sm text-fg-muted mt-1">
             Tu alquiler de abril está pendiente
           </p>

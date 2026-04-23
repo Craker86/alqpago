@@ -9,20 +9,31 @@ import { supabase } from "./lib/supabase";
 export default function TopBar() {
   const pathname = usePathname();
   const [nombre, setNombre] = useState("");
+  const [pendientes, setPendientes] = useState(0);
 
   useEffect(() => {
     async function cargar() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
+
       const { data: perfil } = await supabase
         .from("perfiles")
-        .select("nombre")
+        .select("nombre, rol")
         .eq("id", session.user.id)
         .single();
       if (perfil?.nombre) setNombre(perfil.nombre);
+
+      // Badge: propietario ve conteo de pagos pendientes
+      if (perfil?.rol === "propietario") {
+        const { count } = await supabase
+          .from("pagos")
+          .select("*", { count: "exact", head: true })
+          .eq("estado", "pendiente");
+        if (typeof count === "number") setPendientes(count);
+      }
     }
     cargar();
-  }, []);
+  }, [pathname]);
 
   if (pathname === "/" || pathname === "/login") return null;
 
@@ -43,11 +54,16 @@ export default function TopBar() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/notificaciones"
-            aria-label="Notificaciones"
+            href={pendientes > 0 ? "/propietario#pendientes" : "/notificaciones"}
+            aria-label={`Notificaciones${pendientes > 0 ? ` (${pendientes} pendientes)` : ""}`}
             className="relative p-1.5 rounded-pill text-fg-muted hover:text-fg hover:bg-surface-subtle transition"
           >
             <Bell size={20} strokeWidth={2} />
+            {pendientes > 0 && (
+              <span className="absolute top-0 right-0 min-w-[16px] h-4 px-1 bg-danger-600 text-white rounded-pill text-[9px] font-bold flex items-center justify-center ring-2 ring-surface">
+                {pendientes > 9 ? "9+" : pendientes}
+              </span>
+            )}
           </Link>
           <Link
             href="/perfil"
