@@ -19,11 +19,12 @@
 -- 1. Habilitar RLS
 -- ======================================================================
 
-ALTER TABLE perfiles       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE propiedades    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pagos          ENABLE ROW LEVEL SECURITY;
-ALTER TABLE vinculaciones  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tasa_bcv       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE perfiles         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE propiedades      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pagos            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vinculaciones    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tasa_bcv         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE score_historial  ENABLE ROW LEVEL SECURITY;
 
 
 -- ======================================================================
@@ -169,6 +170,27 @@ DROP POLICY IF EXISTS tasa_bcv_select_all_auth ON tasa_bcv;
 CREATE POLICY tasa_bcv_select_all_auth ON tasa_bcv
   FOR SELECT
   USING (auth.role() = 'authenticated');
+
+
+-- ======================================================================
+-- 7. score_historial
+--
+-- Ledger de eventos de score. Cada fila referencia un pago (pago_id).
+-- SELECT: solo el inquilino dueño del pago ve su propio historial.
+--   (El propietario ve el score ACTUAL del inquilino vía scoring.js,
+--   pero no necesita ver el log de cambios individuales.)
+-- INSERT/UPDATE/DELETE: solo service_role — los eventos los debe escribir
+-- un trigger o una función del backend, no el cliente.
+-- ======================================================================
+
+DROP POLICY IF EXISTS score_historial_select_own ON score_historial;
+CREATE POLICY score_historial_select_own ON score_historial
+  FOR SELECT
+  USING (
+    pago_id IN (
+      SELECT id FROM pagos WHERE user_id = auth.uid()
+    )
+  );
 
 
 -- ======================================================================
