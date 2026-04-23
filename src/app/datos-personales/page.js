@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import { ArrowLeft } from "lucide-react";
 
 export default function DatosPersonales() {
   const router = useRouter();
@@ -62,42 +63,73 @@ export default function DatosPersonales() {
 
   if (cargando) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Cargando...</p>
+      <div className="min-h-screen bg-surface-muted flex items-center justify-center">
+        <p className="text-fg-subtle text-sm">Cargando…</p>
       </div>
     );
   }
 
+  const inputClass = "w-full px-4 py-3 border border-stroke bg-surface rounded-xl text-sm placeholder:text-fg-subtle focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200 transition";
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 max-w-md mx-auto">
-      <Link href="/perfil" className="text-sm text-gray-500 flex items-center gap-1 mb-4">
-        ← Volver al perfil
-      </Link>
+    <div className="min-h-screen bg-surface-muted pb-24">
+      <div className="max-w-[480px] mx-auto px-5">
+        <Link
+          href="/perfil"
+          className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg mt-5 mb-2 transition"
+        >
+          <ArrowLeft size={14} strokeWidth={2.25} /> Volver al perfil
+        </Link>
 
-      <h1 className="text-xl font-bold text-gray-900">Datos personales</h1>
+        <h1 className="text-2xl font-bold text-fg">Datos personales</h1>
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 mt-4 space-y-4">
-        <div>
-          <label className="text-xs font-medium text-gray-700 block mb-1">Nombre completo</label>
-          <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
+        <div className="bg-surface border border-stroke rounded-card shadow-card p-5 mt-4 space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-fg-muted block mb-1.5">Nombre completo</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-fg-muted block mb-1.5">Teléfono / WhatsApp</label>
+            <input
+              type="text"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              placeholder="Ej: 04121234567"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-fg-muted block mb-1.5">Correo electrónico</label>
+            <input
+              type="email"
+              value={email}
+              disabled
+              className="w-full px-4 py-3 border border-stroke bg-surface-subtle text-fg-subtle rounded-xl text-sm"
+            />
+            <p className="text-[10px] text-fg-subtle mt-1">El correo no se puede cambiar</p>
+          </div>
+
+          {mensaje && (
+            <p className={`text-xs text-center font-semibold ${mensaje.includes("Error") ? "text-danger-600" : "text-success-600"}`}>
+              {mensaje}
+            </p>
+          )}
+
+          <button
+            onClick={guardar}
+            disabled={guardando}
+            className={`w-full py-3.5 rounded-pill text-fg-inverse font-semibold text-sm transition ${
+              guardando ? "bg-surface-subtle text-fg-subtle cursor-not-allowed" : "bg-brand-800 hover:bg-brand-900 shadow-card"
+            }`}
+          >
+            {guardando ? "Guardando…" : "Guardar cambios"}
+          </button>
         </div>
-        <div>
-          <label className="text-xs font-medium text-gray-700 block mb-1">Teléfono / WhatsApp</label>
-          <input type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="Ej: 04121234567" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-gray-700 block mb-1">Correo electrónico</label>
-          <input type="email" value={email} disabled className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-400" />
-          <p className="text-[10px] text-gray-400 mt-1">El correo no se puede cambiar</p>
-        </div>
-
-        {mensaje && (
-          <p className={`text-xs text-center ${mensaje.includes("Error") ? "text-red-500" : "text-emerald-600"}`}>{mensaje}</p>
-        )}
-
-        <button onClick={guardar} disabled={guardando} className={`w-full py-3 rounded-xl text-white font-semibold transition-all ${guardando ? "bg-gray-300" : "bg-emerald-700 hover:bg-emerald-800"}`}>
-          {guardando ? "Guardando..." : "Guardar cambios"}
-        </button>
       </div>
     </div>
   );

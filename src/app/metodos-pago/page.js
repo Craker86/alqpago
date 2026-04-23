@@ -1,43 +1,44 @@
 "use client";
+
 import Link from "next/link";
+import { ArrowLeft, Smartphone, DollarSign, Landmark, CreditCard } from "lucide-react";
+
+const metodos = [
+  { Icon: Smartphone, nombre: "Pago móvil", detalle: "Disponible en todos los bancos" },
+  { Icon: DollarSign, nombre: "Zelle", detalle: "Pagos en USD" },
+  { Icon: Landmark, nombre: "Transferencia bancaria", detalle: "Cualquier banco nacional" },
+  { Icon: CreditCard, nombre: "Binance Pay", detalle: "USDT y criptomonedas" },
+];
 
 export default function MetodosPago() {
   return (
-    <div className="min-h-screen bg-gray-50 p-4 max-w-md mx-auto">
-      <Link href="/perfil" className="text-sm text-gray-500 flex items-center gap-1 mb-4">← Volver</Link>
-      <h1 className="text-xl font-bold text-gray-900">Métodos de pago</h1>
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 mt-4 space-y-3">
-        <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
-          <span className="text-xl">📱</span>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Pago móvil</p>
-            <p className="text-xs text-gray-500">Disponible en todos los bancos</p>
-          </div>
-          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md font-medium">Activo</span>
-        </div>
-        <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
-          <span className="text-xl font-bold text-purple-700">Z</span>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Zelle</p>
-            <p className="text-xs text-gray-500">Pagos en USD</p>
-          </div>
-          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md font-medium">Activo</span>
-        </div>
-        <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
-          <span className="text-xl">🏦</span>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Transferencia bancaria</p>
-            <p className="text-xs text-gray-500">Cualquier banco nacional</p>
-          </div>
-          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md font-medium">Activo</span>
-        </div>
-        <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
-          <span className="text-xl">💳</span>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Binance Pay</p>
-            <p className="text-xs text-gray-500">USDT y criptomonedas</p>
-          </div>
-          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md font-medium">Activo</span>
+    <div className="min-h-screen bg-surface-muted pb-24">
+      <div className="max-w-[480px] mx-auto px-5">
+        <Link
+          href="/perfil"
+          className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg mt-5 mb-2 transition"
+        >
+          <ArrowLeft size={14} strokeWidth={2.25} /> Volver al perfil
+        </Link>
+
+        <h1 className="text-2xl font-bold text-fg">Métodos de pago</h1>
+        <p className="text-sm text-fg-muted mt-1">Cuatro rails aceptados en Rentto</p>
+
+        <div className="bg-surface rounded-card shadow-card mt-4 divide-y divide-stroke overflow-hidden">
+          {metodos.map(({ Icon, nombre, detalle }) => (
+            <div key={nombre} className="flex items-center gap-3 p-4">
+              <div className="w-10 h-10 bg-brand-50 rounded-pill flex items-center justify-center flex-shrink-0">
+                <Icon size={18} className="text-brand-700" strokeWidth={2.25} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-fg truncate">{nombre}</p>
+                <p className="text-xs text-fg-muted truncate">{detalle}</p>
+              </div>
+              <span className="inline-flex items-center text-[10px] font-semibold bg-success-100 text-success-600 px-2 py-0.5 rounded-pill flex-shrink-0">
+                Activo
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
