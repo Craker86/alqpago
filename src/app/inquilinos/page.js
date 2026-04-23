@@ -13,6 +13,7 @@ import {
   Calendar,
   FileText,
 } from "lucide-react";
+import { calcularScore, toneDeModo } from "../lib/scoring";
 
 export default function Inquilinos() {
   const router = useRouter();
@@ -49,18 +50,33 @@ export default function Inquilinos() {
 
       const ids = [...new Set(todas.map((v) => v.inquilino_id))];
       let inquilinosPorId = {};
+      let pagosPorInquilino = {};
       if (ids.length > 0) {
         const { data: perfiles } = await supabase
           .from("perfiles")
-          .select("id, nombre, telefono")
+          .select("id, nombre, telefono, created_at")
           .in("id", ids);
         (perfiles || []).forEach((p) => { inquilinosPorId[p.id] = p; });
+
+        const { data: pagosData } = await supabase
+          .from("pagos")
+          .select("*")
+          .in("user_id", ids);
+        (pagosData || []).forEach((p) => {
+          if (!pagosPorInquilino[p.user_id]) pagosPorInquilino[p.user_id] = [];
+          pagosPorInquilino[p.user_id].push(p);
+        });
       }
 
-      const enriquecidas = todas.map((v) => ({
-        ...v,
-        inquilino: inquilinosPorId[v.inquilino_id] || null,
-      }));
+      const enriquecidas = todas.map((v) => {
+        const inquilino = inquilinosPorId[v.inquilino_id] || null;
+        const pagosDeEste = pagosPorInquilino[v.inquilino_id] || [];
+        return {
+          ...v,
+          inquilino,
+          scoring: calcularScore({ perfil: inquilino, pagos: pagosDeEste }),
+        };
+      });
 
       setFilas(enriquecidas);
       setCargando(false);
@@ -118,7 +134,7 @@ export default function Inquilinos() {
 }
 
 function InquilinoCard({ vinculacion, abierto, onToggle }) {
-  const { inquilino, propiedad, estado, inquilino_id, created_at } = vinculacion;
+  const { inquilino, propiedad, estado, inquilino_id, created_at, scoring } = vinculacion;
   const nombre = inquilino?.nombre || `Inquilino ${inquilino_id.substring(0, 6)}…`;
   const inicial = (nombre[0] || "I").toUpperCase();
   const tel = inquilino?.telefono;
@@ -128,6 +144,16 @@ function InquilinoCard({ vinculacion, abierto, onToggle }) {
     pendiente: "bg-warning-100 text-warning-700",
     inactivo: "bg-surface-subtle text-fg-muted",
   }[estado] || "bg-surface-subtle text-fg-muted";
+
+  const score = scoring?.score ?? 0;
+  const modo = scoring?.modo ?? "En construcción";
+  const modoTone = toneDeModo(modo);
+  const modoStyles = {
+    brand: "bg-brand-100 text-brand-800",
+    success: "bg-success-100 text-success-600",
+    warning: "bg-warning-100 text-warning-700",
+    neutral: "bg-surface-subtle text-fg-muted",
+  }[modoTone];
 
   const waHref = tel
     ? `https://wa.me/${tel.replace(/\D/g, "")}?text=${encodeURIComponent(
@@ -160,6 +186,12 @@ function InquilinoCard({ vinculacion, abierto, onToggle }) {
               <Home size={12} strokeWidth={2} className="text-fg-subtle" />
               {propiedad?.nombre || "—"}
             </p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-pill ${modoStyles}`}>
+                {modo}
+              </span>
+              <span className="text-[10px] font-semibold text-fg-muted">Score {score}/100</span>
+            </div>
           </div>
           <div className="flex-shrink-0 self-center text-fg-subtle">
             {abierto ? <ChevronUp size={18} /> : <ChevronDown size={18} />}

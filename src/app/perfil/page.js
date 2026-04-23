@@ -15,13 +15,16 @@ import {
   ChevronRight,
   ArrowRight,
   LogOut,
+  Sparkles,
 } from "lucide-react";
+import { calcularScore, toneDeModo } from "../lib/scoring";
 
 export default function Perfil() {
   const router = useRouter();
   const [usuario, setUsuario] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [rol, setRol] = useState("");
+  const [scoring, setScoring] = useState(null);
 
   const opciones = [
     { Icon: User, nombre: "Datos personales", ruta: "/datos-personales" },
@@ -44,10 +47,25 @@ export default function Perfil() {
         creado: new Date(session.user.created_at).toLocaleDateString("es-VE"),
       });
 
-      const { data: perfil } = await supabase.from("perfiles").select("rol, nombre").eq("id", session.user.id).single();
+      const { data: perfil } = await supabase.from("perfiles").select("*").eq("id", session.user.id).single();
       if (perfil) {
         setRol(perfil.rol);
         if (perfil.nombre) setUsuario((prev) => ({ ...prev, nombre: perfil.nombre }));
+      }
+
+      // Score solo aplica a inquilinos
+      if (perfil?.rol !== "propietario") {
+        const { data: pagosData } = await supabase
+          .from("pagos")
+          .select("*")
+          .eq("user_id", session.user.id);
+        setScoring(
+          calcularScore({
+            perfil,
+            user: { email: session.user.email, created_at: session.user.created_at },
+            pagos: pagosData || [],
+          })
+        );
       }
 
       setCargando(false);
@@ -97,6 +115,10 @@ export default function Perfil() {
           </div>
         </div>
 
+        {scoring && (
+          <ScoreCard scoring={scoring} />
+        )}
+
         <nav className="bg-surface border border-stroke rounded-card mt-6 shadow-card overflow-hidden divide-y divide-stroke">
           {opciones.map(({ Icon, nombre, ruta }) => (
             <Link
@@ -132,5 +154,42 @@ export default function Perfil() {
 
       </div>
     </div>
+  );
+}
+
+function ScoreCard({ scoring }) {
+  const { score, modo } = scoring;
+  const modoTone = toneDeModo(modo);
+  const modoStyles = {
+    brand: "bg-brand-100 text-brand-800",
+    success: "bg-success-100 text-success-600",
+    warning: "bg-warning-100 text-warning-700",
+    neutral: "bg-surface-subtle text-fg-muted",
+  }[modoTone];
+
+  return (
+    <Link
+      href="/contrato"
+      className="block bg-brand-800 text-fg-inverse rounded-card p-4 mt-6 shadow-elevated hover:bg-brand-900 transition"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 bg-white/15 rounded-pill flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+          <Sparkles size={22} strokeWidth={2.25} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] uppercase tracking-wide opacity-80 font-semibold">Tu score Rentto</p>
+            <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-pill ${modoStyles}`}>
+              {modo}
+            </span>
+          </div>
+          <p className="text-2xl font-bold mt-0.5">{score}<span className="text-sm opacity-70 font-normal"> / 100</span></p>
+        </div>
+        <ArrowRight size={18} className="opacity-80 flex-shrink-0" strokeWidth={2.25} />
+      </div>
+      <div className="mt-3 h-1.5 w-full bg-white/15 rounded-pill overflow-hidden">
+        <div className="h-full bg-white rounded-pill transition-all" style={{ width: `${score}%` }} />
+      </div>
+    </Link>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import { Trophy, TrendingUp, Home, Calendar, User, FileText, AlertCircle } from "lucide-react";
+import { calcularScore, CRITERIOS, toneDeModo } from "../lib/scoring";
 
 export default function Contrato() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function Contrato() {
   const [propiedad, setPropiedad] = useState(null);
   const [pagos, setPagos] = useState([]);
   const [contratos, setContratos] = useState([]);
+  const [scoring, setScoring] = useState(null);
 
   useEffect(() => {
     async function cargar() {
@@ -20,7 +22,7 @@ export default function Contrato() {
 
       const { data: perfil } = await supabase
         .from("perfiles")
-        .select("rol")
+        .select("*")
         .eq("id", session.user.id)
         .single();
       const currentRol = perfil?.rol || "inquilino";
@@ -50,9 +52,17 @@ export default function Contrato() {
         const { data: prop } = await supabase
           .from("propiedades").select("*").limit(1).single();
         const { data: pagosData } = await supabase
-          .from("pagos").select("*").eq("estado", "confirmado");
+          .from("pagos").select("*");
         setPropiedad(prop);
         setPagos(pagosData || []);
+
+        setScoring(
+          calcularScore({
+            perfil,
+            user: { email: session.user.email, created_at: session.user.created_at },
+            pagos: pagosData || [],
+          })
+        );
       }
 
       setCargando(false);
@@ -72,7 +82,7 @@ export default function Contrato() {
     return <VistaPropietario contratos={contratos} />;
   }
 
-  return <VistaInquilino propiedad={propiedad} pagos={pagos} />;
+  return <VistaInquilino propiedad={propiedad} pagos={pagos} scoring={scoring} />;
 }
 
 function VistaPropietario({ contratos }) {
@@ -169,11 +179,18 @@ function Row({ icon, label, value, valueClass = "text-fg" }) {
   );
 }
 
-function VistaInquilino({ propiedad, pagos }) {
-  const pagosConfirmados = pagos.length;
-  const score = Math.min(pagosConfirmados * 70 + 200, 1000);
-  const scoreTexto = score >= 800 ? "Excelente" : score >= 600 ? "Bueno" : score >= 400 ? "Regular" : "En construcción";
-  const scorePorcentaje = score / 10;
+function VistaInquilino({ propiedad, pagos, scoring }) {
+  const score = scoring?.score ?? 0;
+  const modo = scoring?.modo ?? "En construcción";
+  const desglose = scoring?.desglose ?? {};
+  const pagosConfirmados = pagos.filter((p) => p.estado === "confirmado").length;
+  const modoTone = toneDeModo(modo);
+  const modoStyles = {
+    brand: "bg-brand-100 text-brand-800",
+    success: "bg-success-100 text-success-600",
+    warning: "bg-warning-100 text-warning-700",
+    neutral: "bg-surface-subtle text-fg-muted",
+  }[modoTone];
 
   return (
     <div className="min-h-screen bg-surface-muted pb-24">
@@ -218,24 +235,58 @@ function VistaInquilino({ propiedad, pagos }) {
             <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
               <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-surface-subtle)" strokeWidth="3" />
               <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-brand-600)" strokeWidth="3"
-                strokeDasharray={`${scorePorcentaje} 100`} strokeLinecap="round" />
+                strokeDasharray={`${score} 100`} strokeLinecap="round" />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-lg font-bold text-brand-800">{score}</span>
             </div>
           </div>
-          <div>
-            <p className="font-semibold text-brand-800">{scoreTexto}</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-brand-800">{score} / 100</p>
+              <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-pill ${modoStyles}`}>
+                {modo}
+              </span>
+            </div>
             <p className="text-xs text-fg-muted mt-0.5">
               {pagosConfirmados} {pagosConfirmados === 1 ? "pago confirmado" : "pagos confirmados"}
             </p>
             <p className="text-xs text-brand-600 font-semibold mt-1">
-              +70 pts por cada pago puntual
+              6 criterios, 100 puntos en total
             </p>
           </div>
         </div>
 
-        {score >= 600 && (
+        <div className="bg-surface rounded-card shadow-card p-4 mt-3">
+          <h3 className="text-sm font-semibold text-fg">Desglose</h3>
+          <div className="mt-3 space-y-3">
+            {CRITERIOS.map((c) => {
+              const valor = desglose[c.key] || 0;
+              const pct = (valor / c.max) * 100;
+              return (
+                <div key={c.key}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-fg">{c.label}</p>
+                    <span className="text-[11px] font-semibold text-fg-muted">
+                      {valor} / {c.max}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-fg-muted mt-0.5">{c.desc}</p>
+                  <div className="mt-1.5 h-1.5 w-full bg-surface-subtle rounded-pill overflow-hidden">
+                    <div
+                      className={`h-full rounded-pill transition-all ${
+                        valor === c.max ? "bg-success-600" : valor > 0 ? "bg-brand-600" : "bg-stroke"
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {score >= 70 && (
           <div className="bg-surface rounded-card shadow-card p-4 mt-3 flex items-center gap-3">
             <div className="w-10 h-10 bg-warning-100 rounded-pill flex items-center justify-center flex-shrink-0">
               <Trophy size={18} className="text-warning-700" strokeWidth={2.25} />
@@ -243,7 +294,7 @@ function VistaInquilino({ propiedad, pagos }) {
             <div>
               <p className="text-sm font-semibold text-fg">Beneficio desbloqueado</p>
               <p className="text-xs text-fg-muted mt-0.5">
-                Tu puntaje te da acceso a tasas preferenciales en seguros de hogar
+                Calificás para modo <span className="font-semibold">{modo}</span> — acceso a tasas preferenciales
               </p>
             </div>
           </div>
@@ -255,12 +306,16 @@ function VistaInquilino({ propiedad, pagos }) {
           </div>
           <div>
             <p className="text-sm font-semibold text-fg">
-              {score >= 800 ? "Score máximo alcanzado" : "Tu score está subiendo"}
+              {score >= 85 ? "Score máximo alcanzado" : "Tu score está subiendo"}
             </p>
             <p className="text-xs text-fg-muted mt-0.5">
-              {score >= 800
+              {score >= 85
                 ? "Mantén tus pagos puntuales para conservar tu nivel"
-                : `Te faltan ${Math.ceil((800 - score) / 70)} pagos más para nivel Excelente`}
+                : score >= 70
+                  ? `Te faltan ${85 - score} pts para modo Premium`
+                  : score >= 50
+                    ? `Te faltan ${70 - score} pts para modo Protegido`
+                    : `Te faltan ${50 - score} pts para calificar a modo Básico`}
             </p>
           </div>
         </div>
