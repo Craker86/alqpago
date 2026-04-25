@@ -135,18 +135,9 @@ export default function Perfil() {
           ))}
         </nav>
 
-        {rol === "propietario" && (
-          <Link
-            href="/propietario"
-            className="flex items-center justify-center gap-2 w-full py-3 mt-6 text-sm text-brand-700 font-semibold border border-brand-200 rounded-pill hover:bg-brand-50 transition"
-          >
-            Panel del propietario <ArrowRight size={14} strokeWidth={2.5} />
-          </Link>
-        )}
-
         <button
           onClick={cerrarSesion}
-          className="flex items-center justify-center gap-2 w-full py-3 mt-3 text-sm text-danger-600 font-semibold border border-danger-100 rounded-pill hover:bg-danger-100 transition"
+          className="flex items-center justify-center gap-2 w-full py-3 mt-6 text-sm text-danger-600 font-semibold border border-danger-100 rounded-pill hover:bg-danger-100 transition"
         >
           <LogOut size={14} strokeWidth={2.5} />
           Cerrar sesión

@@ -190,9 +190,13 @@ export default function Propietario() {
         </section>
 
         {pendientes.length > 0 && (
-          <Link
-            href="#pendientes"
-            className="flex items-center gap-3 bg-warning-100 text-warning-700 rounded-card p-4 mt-4 shadow-card hover:brightness-95 transition"
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById("pendientes");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="w-full text-left flex items-center gap-3 bg-warning-100 text-warning-700 rounded-card p-4 mt-4 shadow-card hover:brightness-95 transition"
           >
             <div className="w-10 h-10 bg-warning-100 border border-warning-600/30 rounded-pill flex items-center justify-center flex-shrink-0">
               <AlertCircle size={18} strokeWidth={2.25} />
@@ -206,7 +210,7 @@ export default function Propietario() {
               </p>
             </div>
             <ArrowRight size={16} strokeWidth={2.5} className="flex-shrink-0" />
-          </Link>
+          </button>
         )}
 
         <section className="grid grid-cols-3 gap-2 mt-4">
