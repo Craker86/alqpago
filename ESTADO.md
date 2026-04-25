@@ -1,91 +1,63 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 23 abril 2026, fin de sesión
+**Última actualización:** 25 abril 2026, fin de sesión
 
-## ✅ Completado hoy (23 abr) — día de MVP feature-complete
+## ✅ Completado en sesión 25 abr
 
-### Diseño
-- [x] Migración de toda la app autenticada al design system (9 pantallas: `/pagar`, `/datos-personales`, `/metodos-pago`, `/recibos`, `/notificaciones`, `/seguridad`, `/configuracion`, `/nueva-propiedad`, `/vincular`)
-- [x] Chasis unificado: TopBar sticky + NavBar role-aware con FAB central
-- [x] `/propietario` rebuilt como command-center (hero de cobrado/esperado, alertas accionables, quick actions, próximos cobros)
-- [x] Nuevas rutas: `/inquilinos` (directorio expandible), `/estadisticas` (KPIs + tendencia 6 meses + ranking top propiedades)
-- [x] `/contrato` role-aware: propietario ve lista de contratos, inquilino ve detalle + score
-- [x] Método **Efectivo** añadido como 5to rail en `/pagar` y `/metodos-pago`
-- [x] Grid de métodos en `/dashboard` reestructurado a scroll horizontal con snap
+### Producto
+- [x] **Validación modo vs score** en `/vincular` y marketplace — bloquea vinculación si score insuficiente, da tips para subir score
+- [x] **Trigger de score en Supabase** — auto-registra +7/−10 pts en `score_historial` al cambiar estado de pago
+- [x] **UI Historial de pagos** en `/contrato` inquilino — timeline con eventos
+- [x] **Página `/modos`** pública para marketing y educación
+- [x] **Sistema de notificaciones inbox**:
+  - Tabla `notificaciones` con RLS
+  - 3 triggers: pago_insertado, pago_cambio_estado, vinculacion_creada
+  - Página `/notificaciones` rebuilt como inbox real con marcar leída, navegación por link, formato de fecha relativa
+  - Bell del TopBar muestra count de unreads de notificaciones (no más pagos pendientes)
+- [x] **Botón quitar foto inline** en `/propietario` para limpiar fotos sucias rápido
 
-### Producto — Modelo de negocio
-- [x] **Scoring MVP** (`src/app/lib/scoring.js`) — función pura 0-100 con 6 criterios: perfil completo, email confiable, antigüedad, pagos confirmados, sin rechazos, sin pendientes viejos. Umbrales: Básico ≥50, Protegido ≥70, Premium ≥85
-- [x] Scoring mostrado en `/contrato` (círculo + desglose), `/inquilinos` (badge por tenant), `/perfil` (card brand con progreso)
-- [x] **Los 3 modos de Rentto** (`src/app/lib/modos.js`) — Básico (facilitador 5% prop), Protegido (garante parcial 4%+3%), Premium (garante total 5%+5%). Helpers `getModo`, `toneDeModo`, `calcularComisiones`
-- [x] Selector de modo en `/nueva-propiedad` (3 cards comparativas con comisiones en vivo)
-- [x] Toggle group de modo en edit form de `/propietario`
-- [x] Badge de modo en cards del marketplace `/propiedades`
-- [x] Pricing breakdown en `/contrato` inquilino (renta + comisión = total)
-- [x] Columna `modo` añadida a `propiedades` en Supabase
-
-### Seguridad
-- [x] **Privacy fixes**: filtros `user_id` en todas las queries client-side (8 archivos) — antes inquilinos veían propiedades/pagos ajenos y propietarios veían inventario global
-- [x] **Row Level Security** habilitado en todas las tablas del public schema (perfiles, propiedades, pagos, vinculaciones, tasa_bcv, score_historial)
-- [x] Policies RLS escritas y aplicadas (`supabase-rls.sql` en el repo) — scoping correcto: inquilino ve lo suyo, propietario ve lo suyo, marketplace abierto a autenticados
-- [x] Storage bucket `comprobantes` — policy SELECT pública eliminada (ya no se puede listar el bucket, pero los links directos siguen funcionando)
-- [x] **Leaked Password Protection** activado en Auth (check contra Have I Been Pwned)
-- [x] Credenciales Supabase movidas a env vars (`NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`) — antes hardcoded en `src/app/lib/supabase.js`
-- [x] Env vars configuradas en Vercel, deploy verde en producción
-
-### Bugs resueltos
-- [x] "Hola, Jesús" hardcoded → ahora pulla `perfil.nombre`
-- [x] `/design-system` eliminada (showcase ya no necesario)
-- [x] Badge real de pendientes en la campana del TopBar (conteo scoped a propiedades del propietario)
-- [x] Email de `/api/notificar` ahora tiene botón CTA clickeable que linkea a `/propietario#pendientes`
-
-### Producción
-- [x] Deploy verde en `rentto.vercel.app`
-- [x] `/api/notificar` probado en producción (HTTP 200, email llega con CTA funcionando)
+### Performance
+- [x] `@vercel/analytics` y `@vercel/speed-insights` integrados
+- [x] Speed Insights activo en producción · **score 100/100** (P75 de usuarios reales)
+- [x] LCP 1.41s, FCP 0.45s, TTFB 0.21s, CLS 0
 
 ## ⏳ Pendiente
 
-### Datos
-- [ ] Limpiar fotos sucias en BD (algunas propiedades tienen screenshots de auth pages como fotos)
-- [ ] El diagrama muestra `propiedades.modo` pero verificar que todas las filas existentes tengan valor (no null) — si hay nulls, UPDATE a 'basico' por defecto
-
 ### Producto
-- [ ] Página `/modos` educativa (landing comparativa de Básico/Protegido/Premium para marketing)
-- [ ] Auto-registro en `score_historial` — trigger que inserte fila cuando un pago pase a 'confirmado' (hoy la tabla está vacía, el scoring la ignora)
-- [ ] Validación de modo vs score del inquilino al crear vinculación (si propiedad es Premium, inquilino debe tener score ≥85)
-- [ ] Sistema real de notificaciones (tabla `notificaciones` con inbox del usuario + campana con unreads)
+- [ ] Validar el flujo end-to-end de notificaciones automáticas (pago → confirma → notif)
+- [ ] Sistema de preferencias de notificaciones (volver a poner los toggles de "qué notif quiero recibir" como sub-página)
+- [ ] Limpiar fotos sucias en BD via UI (botón ya existe, falta hacerlo)
+- [ ] Limpiar nulls en `propiedades.modo` (UPDATE batch)
+
+### Producción
+- [ ] Activar Web Analytics toggle en Vercel UI (separado del package)
+- [ ] Expandir "4 Recomendaciones" en Configuración de implementación de Vercel
+- [ ] Activar "Implementación de vista previa" en Vercel
+- [ ] Comprar dominio propio (rentto.com o rentto.ve)
+- [ ] Configurar Resend con dominio custom (mails ya no caen en spam)
 
 ### Crecimiento
-- [ ] Comprar dominio propio (rentto.com o rentto.ve)
-- [ ] Configurar Resend con dominio custom (hoy mails caen en spam por `onboarding@resend.dev`)
-- [ ] Preparar landing de marketing / wait-list
 - [ ] Plan de piloto con 10 propiedades en Caracas (Municipio Sucre)
+- [ ] Wait-list / landing de marketing con `/modos` como punto central
 
-### Técnico
-- [ ] 4 Recommendations que Vercel muestra en Deployment Settings (revisar qué son)
-- [ ] Considerar si los `console.log` de `make-icons.js` siguen siendo necesarios
-- [ ] PWA — revisar por qué no se instala bien desde teléfono
+## 📋 Decisiones tomadas en esta sesión
 
-## 📋 Decisiones tomadas
+- **Score histórico vs score visible:** son dos modelos. `score_historial.score_total` es ledger acumulativo de eventos de pago (+7/−10). El score de la card es 6 criterios escalados a 100. La UI lo aclara con copy
+- **Notificaciones INSERT:** sin policy de cliente. Solo los triggers SECURITY DEFINER pueden insertar. Garantía de que un usuario malicioso no puede spamearle notifs a otro
+- **Bell del TopBar:** apunta a `/notificaciones` siempre. Antes había lógica condicional de ir a `/propietario#pendientes` si había pagos por confirmar; ahora la fuente única es la tabla `notificaciones`
 
-- **Scoring:** 6 criterios medibles con datos actuales, escalados a 100 pts. Sin integraciones externas por ahora (identidad, bancos, referencias externas) — viene en fase 2
-- **Modos:** pricing según MODELO-NEGOCIO.md, sin enforcement de score_minimo todavía (el propietario puede elegir cualquiera)
-- **RLS:** conviven policies en español (viejas, owner-only) con las mías en inglés (añaden propietario-view). Son PERMISSIVE → se combinan con OR. Limpieza de duplicados: tarea futura
-- **Env vars:** `NEXT_PUBLIC_*` porque son client-side. Supabase anon key es safe de exponer por diseño (RLS protege)
+## 📂 Archivos clave nuevos en esta sesión
 
-## 📂 Archivos clave
+- `supabase-score-trigger.sql` — trigger del score
+- `supabase-notificaciones.sql` — sistema de inbox completo
+- `src/app/lib/scoring.js` — funciones de scoring (ya existía, ahora integrada en /vincular y marketplace)
+- `src/app/lib/modos.js` — definición de los 3 modos (ya existía, ahora integrada en validación)
+- `src/app/modos/page.js` — landing pública
+- `src/app/notificaciones/page.js` — rewrite como inbox
 
-- `MODELO-NEGOCIO.md` — estrategia de producto, 3 modos, scoring criteria
-- `supabase-rls.sql` — policies RLS idempotentes (para correr en SQL editor)
-- `src/app/lib/scoring.js` — función pura de scoring MVP
-- `src/app/lib/modos.js` — definición de los 3 modos + helpers
-- `src/app/lib/supabase.js` — cliente con env vars
-- `src/app/globals.css` — design tokens (Tailwind v4 @theme)
-- `src/app/TopBar.js` / `NavBar.js` — chasis autenticado
+## 🎯 Próxima sesión — prioridades
 
-## 🎯 Próxima sesión — prioridades sugeridas
-
-1. **Auto-registro en score_historial** (trigger en Supabase) — hace real el scoring
-2. **Validación modo vs score** — impide que inquilinos se vinculen a propiedades fuera de su rango
-3. **Limpieza de data** (fotos sucias, nulls en modo)
-4. **Dominio propio + Resend** — fuera del spam
-5. **Landing de wait-list** con `/modos` educativa
+1. **End-to-end test de notificaciones** — confirmar que el trigger crea notifs reales al hacer pagos y vincular
+2. **Activar Web Analytics** en Vercel UI
+3. **Expandir 4 Recomendaciones** y atacar las que valen la pena
+4. **Dominio propio + Resend** — sale del spam, requiere tu compra
