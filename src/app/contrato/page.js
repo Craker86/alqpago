@@ -16,6 +16,7 @@ export default function Contrato() {
   const [pagos, setPagos] = useState([]);
   const [contratos, setContratos] = useState([]);
   const [scoring, setScoring] = useState(null);
+  const [historial, setHistorial] = useState([]);
 
   useEffect(() => {
     async function cargar() {
@@ -70,6 +71,17 @@ export default function Contrato() {
           .eq("user_id", session.user.id);
         setPagos(pagosData || []);
 
+        // Historial de eventos de score (poblado por el trigger en Supabase)
+        const pagosIds = (pagosData || []).map((p) => p.id);
+        if (pagosIds.length > 0) {
+          const { data: historialData } = await supabase
+            .from("score_historial")
+            .select("*")
+            .in("pago_id", pagosIds)
+            .order("created_at", { ascending: false });
+          setHistorial(historialData || []);
+        }
+
         setScoring(
           calcularScore({
             perfil,
@@ -96,7 +108,7 @@ export default function Contrato() {
     return <VistaPropietario contratos={contratos} />;
   }
 
-  return <VistaInquilino propiedad={propiedad} pagos={pagos} scoring={scoring} />;
+  return <VistaInquilino propiedad={propiedad} pagos={pagos} scoring={scoring} historial={historial} />;
 }
 
 function VistaPropietario({ contratos }) {
@@ -244,7 +256,7 @@ function Row({ icon, label, value, valueClass = "text-fg" }) {
   );
 }
 
-function VistaInquilino({ propiedad, pagos, scoring }) {
+function VistaInquilino({ propiedad, pagos, scoring, historial }) {
   const score = scoring?.score ?? 0;
   const modo = scoring?.modo ?? "En construcción";
   const desglose = scoring?.desglose ?? {};
@@ -354,6 +366,48 @@ function VistaInquilino({ propiedad, pagos, scoring }) {
             })}
           </div>
         </div>
+
+        {historial && historial.length > 0 && (
+          <div className="bg-surface rounded-card shadow-card p-4 mt-3">
+            <h3 className="text-sm font-semibold text-fg">Historial de score</h3>
+            <p className="text-xs text-fg-muted mt-0.5">
+              Eventos automáticos por cada pago confirmado o rechazado
+            </p>
+            <ol className="mt-3 space-y-2.5">
+              {historial.slice(0, 10).map((ev) => {
+                const positivo = ev.puntos > 0;
+                return (
+                  <li key={ev.id} className="flex items-start gap-2.5">
+                    <span
+                      className={`inline-flex items-center justify-center text-[11px] font-bold w-12 flex-shrink-0 px-2 py-0.5 rounded-pill ${
+                        positivo
+                          ? "bg-success-100 text-success-600"
+                          : "bg-danger-100 text-danger-600"
+                      }`}
+                    >
+                      {positivo ? "+" : ""}{ev.puntos}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-fg">{ev.motivo}</p>
+                      <p className="text-[10px] text-fg-subtle">
+                        {new Date(ev.created_at).toLocaleDateString("es-VE", {
+                          day: "numeric", month: "long", year: "numeric",
+                        })}
+                        {" · Total: "}
+                        <span className="font-semibold text-fg-muted">{ev.score_total} pts</span>
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            {historial.length > 10 && (
+              <p className="text-[10px] text-fg-subtle text-center mt-3">
+                Mostrando 10 de {historial.length} eventos
+              </p>
+            )}
+          </div>
+        )}
 
         {score >= 70 && (
           <div className="bg-surface rounded-card shadow-card p-4 mt-3 flex items-center gap-3">
