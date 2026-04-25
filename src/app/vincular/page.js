@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
-import { ArrowLeft, Home, KeyRound } from "lucide-react";
+import { ArrowLeft, Home, KeyRound, Shield, ShieldCheck, ShieldPlus, CheckCircle2, AlertTriangle } from "lucide-react";
+import { calcularScore, toneDeModo as toneDeScore } from "../lib/scoring";
+import { getModo, toneDeModo } from "../lib/modos";
 
 export default function Vincular() {
   const router = useRouter();
@@ -12,6 +14,35 @@ export default function Vincular() {
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [propiedad, setPropiedad] = useState(null);
+  const [scoring, setScoring] = useState(null);
+
+  // Carga el scoring del inquilino al montar (para tenerlo listo cuando busque)
+  useEffect(() => {
+    async function cargarScoring() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { router.push("/login"); return; }
+
+      const { data: perfil } = await supabase
+        .from("perfiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      const { data: pagosData } = await supabase
+        .from("pagos")
+        .select("*")
+        .eq("user_id", session.user.id);
+
+      setScoring(
+        calcularScore({
+          perfil,
+          user: { email: session.user.email, created_at: session.user.created_at },
+          pagos: pagosData || [],
+        })
+      );
+    }
+    cargarScoring();
+  }, []);
 
   async function buscarPropiedad() {
     setCargando(true);
@@ -55,6 +86,11 @@ export default function Vincular() {
     }
     setCargando(false);
   }
+
+  const modo = propiedad ? getModo(propiedad.modo) : null;
+  const myScore = scoring?.score ?? 0;
+  const requerido = modo?.scoreMinimo ?? 0;
+  const calificas = myScore >= requerido;
 
   return (
     <div className="min-h-screen bg-surface-muted pb-24">
@@ -113,6 +149,8 @@ export default function Vincular() {
                 <p className="text-xs text-fg-muted mt-0.5">{propiedad.direccion}</p>
               </div>
 
+              <ModoBanner modo={modo} />
+
               <div className="bg-surface-subtle rounded-card p-4 space-y-2.5">
                 <InfoRow label="Propietario" value={propiedad.propietario_nombre || "—"} />
                 <InfoRow
@@ -122,6 +160,13 @@ export default function Vincular() {
                 />
                 <InfoRow label="Día de corte" value={`Día ${propiedad.dia_corte}`} />
               </div>
+
+              <ScoreCheck
+                myScore={myScore}
+                requerido={requerido}
+                calificas={calificas}
+                modo={modo}
+              />
 
               {mensaje && (
                 <p className={`text-xs text-center font-semibold ${
@@ -133,12 +178,18 @@ export default function Vincular() {
 
               <button
                 onClick={confirmarVinculacion}
-                disabled={cargando}
+                disabled={cargando || !calificas}
                 className={`w-full py-3.5 rounded-pill text-fg-inverse font-semibold text-sm transition ${
-                  cargando ? "bg-surface-subtle text-fg-subtle cursor-not-allowed" : "bg-brand-800 hover:bg-brand-900 shadow-card"
+                  cargando || !calificas
+                    ? "bg-surface-subtle text-fg-subtle cursor-not-allowed"
+                    : "bg-brand-800 hover:bg-brand-900 shadow-card"
                 }`}
               >
-                {cargando ? "Vinculando…" : "Confirmar vinculación"}
+                {cargando
+                  ? "Vinculando…"
+                  : calificas
+                    ? "Confirmar vinculación"
+                    : `Te faltan ${requerido - myScore} pts`}
               </button>
               <button
                 onClick={() => { setPropiedad(null); setCodigo(""); setMensaje(""); }}
@@ -149,6 +200,68 @@ export default function Vincular() {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ModoBanner({ modo }) {
+  const tone = toneDeModo(modo.id);
+  const Icon = modo.id === "premium" ? ShieldPlus : modo.id === "protegido" ? ShieldCheck : Shield;
+  const heroStyles = {
+    brand: "bg-brand-800 text-fg-inverse",
+    success: "bg-success-600 text-fg-inverse",
+    warning: "bg-warning-600 text-fg-inverse",
+  }[tone] || "bg-fg text-fg-inverse";
+
+  return (
+    <div className={`${heroStyles} rounded-card p-3 flex items-center gap-3`}>
+      <div className="w-9 h-9 bg-white/20 rounded-pill flex items-center justify-center flex-shrink-0">
+        <Icon size={16} strokeWidth={2.25} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold">Rentto {modo.label}</p>
+        <p className="text-[11px] opacity-85">{modo.descripcion}</p>
+      </div>
+    </div>
+  );
+}
+
+function ScoreCheck({ myScore, requerido, calificas, modo }) {
+  if (calificas) {
+    return (
+      <div className="bg-success-100 text-success-600 rounded-card p-3 flex items-center gap-2.5">
+        <CheckCircle2 size={20} strokeWidth={2.25} className="flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold">Calificas para modo {modo.label}</p>
+          <p className="text-[11px]">
+            Tu score es <span className="font-bold">{myScore}</span> · Mínimo requerido: {requerido}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const faltan = requerido - myScore;
+  return (
+    <div className="bg-warning-100 text-warning-700 rounded-card p-3">
+      <div className="flex items-center gap-2.5">
+        <AlertTriangle size={20} strokeWidth={2.25} className="flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold">No calificas para este modo todavía</p>
+          <p className="text-[11px]">
+            Tu score: <span className="font-bold">{myScore}</span> · Requerido: {requerido} · Faltan {faltan} pts
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 pt-3 border-t border-warning-700/20 text-[11px] leading-relaxed">
+        <p className="font-semibold mb-1">Para subir tu score:</p>
+        <ul className="space-y-0.5 ml-3 list-disc">
+          <li>Completa tu perfil (nombre + teléfono)</li>
+          <li>Cada pago confirmado a tiempo suma 7 pts</li>
+          <li>Mantén pagos sin pendientes &gt;7 días</li>
+          <li>Pídele a tu propietario una propiedad de modo más bajo (Básico requiere 50 pts)</li>
+        </ul>
       </div>
     </div>
   );

@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
-import { Search, Building2, X, MessageCircle, Shield, ShieldCheck, ShieldPlus } from "lucide-react";
+import { Search, Building2, X, MessageCircle, Shield, ShieldCheck, ShieldPlus, CheckCircle2, AlertTriangle } from "lucide-react";
 import { getModo, toneDeModo } from "../lib/modos";
+import { calcularScore } from "../lib/scoring";
 
 export default function Propiedades() {
   const router = useRouter();
@@ -13,18 +14,35 @@ export default function Propiedades() {
   const [filtro, setFiltro] = useState("todas");
   const [busqueda, setBusqueda] = useState("");
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [myScore, setMyScore] = useState(0);
+  const [esInquilino, setEsInquilino] = useState(true);
 
   useEffect(() => {
     async function cargar() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push("/login"); return; }
 
-      const { data } = await supabase
-        .from("propiedades")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const [propsRes, perfilRes, pagosRes] = await Promise.all([
+        supabase.from("propiedades").select("*").order("created_at", { ascending: false }),
+        supabase.from("perfiles").select("*").eq("id", session.user.id).single(),
+        supabase.from("pagos").select("*").eq("user_id", session.user.id),
+      ]);
 
-      setPropiedades(data || []);
+      setPropiedades(propsRes.data || []);
+
+      const perfil = perfilRes.data;
+      setEsInquilino(perfil?.rol !== "propietario");
+
+      // Score solo importa para inquilinos buscando casa
+      if (perfil?.rol !== "propietario") {
+        const { score } = calcularScore({
+          perfil,
+          user: { email: session.user.email, created_at: session.user.created_at },
+          pagos: pagosRes.data || [],
+        });
+        setMyScore(score);
+      }
+
       setCargando(false);
     }
     cargar();
@@ -109,7 +127,13 @@ export default function Propiedades() {
             </div>
           ) : (
             propiedadesFiltradas.map((prop) => (
-              <PropiedadCard key={prop.id} prop={prop} onPhotoClick={setFotoAmpliada} />
+              <PropiedadCard
+                key={prop.id}
+                prop={prop}
+                onPhotoClick={setFotoAmpliada}
+                myScore={myScore}
+                esInquilino={esInquilino}
+              />
             ))
           )}
         </div>
@@ -157,7 +181,29 @@ function ModoBadge({ modoId }) {
   );
 }
 
-function PropiedadCard({ prop, onPhotoClick }) {
+function ScoreCheck({ prop, myScore }) {
+  const modo = getModo(prop.modo);
+  const requerido = modo.scoreMinimo;
+  const calificas = myScore >= requerido;
+
+  if (calificas) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-success-100 text-success-600 px-2 py-1 rounded-pill w-fit">
+        <CheckCircle2 size={11} strokeWidth={2.5} />
+        Calificas (score {myScore})
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-warning-100 text-warning-700 px-2 py-1 rounded-pill w-fit">
+      <AlertTriangle size={11} strokeWidth={2.5} />
+      Te faltan {requerido - myScore} pts (necesitas {requerido})
+    </span>
+  );
+}
+
+function PropiedadCard({ prop, onPhotoClick, myScore, esInquilino }) {
   const waHref = `https://wa.me/${prop.telefono || ""}?text=${encodeURIComponent(
     `Hola, vi tu propiedad ${prop.nombre} en Rentto y me interesa.`
   )}`;
@@ -189,7 +235,10 @@ function PropiedadCard({ prop, onPhotoClick }) {
           </div>
         </div>
 
-        <ModoBadge modoId={prop.modo} />
+        <div className="flex gap-2 flex-wrap">
+          <ModoBadge modoId={prop.modo} />
+          {esInquilino && <ScoreCheck prop={prop} myScore={myScore} />}
+        </div>
 
         <div className="flex gap-2 flex-wrap">
           <span className="inline-flex items-center text-[11px] bg-brand-50 text-brand-700 px-2.5 py-1 rounded-pill font-semibold">
