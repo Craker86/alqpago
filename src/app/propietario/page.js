@@ -108,6 +108,24 @@ export default function Propietario() {
     setGuardando(false);
   }
 
+  async function quitarFoto(propId, fotoUrl) {
+    if (!window.confirm("¿Quitar esta foto de la propiedad?")) return;
+    const prop = propiedades.find((p) => p.id === propId);
+    if (!prop) return;
+    const nuevasFotos = (prop.fotos || []).filter((f) => f !== fotoUrl);
+    const { error } = await supabase
+      .from("propiedades")
+      .update({ fotos: nuevasFotos })
+      .eq("id", propId);
+    if (error) {
+      window.alert("Error al quitar la foto: " + error.message);
+      return;
+    }
+    setPropiedades(propiedades.map((p) =>
+      p.id === propId ? { ...p, fotos: nuevasFotos } : p
+    ));
+  }
+
   if (cargando) {
     return (
       <div className="min-h-screen bg-surface-muted flex items-center justify-center">
@@ -242,6 +260,7 @@ export default function Propietario() {
                       prop={prop}
                       onEdit={() => iniciarEdicion(prop)}
                       onPhotoClick={setFotoAmpliada}
+                      onRemovePhoto={quitarFoto}
                     />
                   )}
                 </article>
@@ -334,7 +353,7 @@ function QuickAction({ href, Icon, label }) {
   );
 }
 
-function PropiedadView({ prop, onEdit, onPhotoClick }) {
+function PropiedadView({ prop, onEdit, onPhotoClick, onRemovePhoto }) {
   const modo = getModo(prop.modo);
   const modoTone = toneDeModoProp(modo.id);
   const ModoIcon = modo.id === "premium" ? ShieldPlus : modo.id === "protegido" ? ShieldCheck : Shield;
@@ -424,13 +443,21 @@ function PropiedadView({ prop, onEdit, onPhotoClick }) {
       {prop.fotos && prop.fotos.length > 0 && (
         <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
           {prop.fotos.map((foto, i) => (
-            <img
-              key={i}
-              src={foto}
-              alt=""
-              className="w-16 h-16 object-cover rounded-lg flex-shrink-0 cursor-zoom-in"
-              onClick={() => onPhotoClick(foto)}
-            />
+            <div key={i} className="relative flex-shrink-0 group">
+              <img
+                src={foto}
+                alt=""
+                className="w-16 h-16 object-cover rounded-lg cursor-zoom-in"
+                onClick={() => onPhotoClick(foto)}
+              />
+              <button
+                onClick={(e) => { e.stopPropagation(); onRemovePhoto(prop.id, foto); }}
+                aria-label="Quitar foto"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-danger-600 text-white rounded-pill flex items-center justify-center shadow-card hover:bg-danger-600/90 transition opacity-90"
+              >
+                <X size={10} strokeWidth={3} />
+              </button>
+            </div>
           ))}
         </div>
       )}
