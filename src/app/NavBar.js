@@ -56,7 +56,7 @@ export default function NavBar() {
     cargar();
   }, []);
 
-  if (pathname === "/" || pathname === "/login") return null;
+  if (pathname === "/" || pathname === "/login" || pathname === "/modos") return null;
 
   const config = rol === "propietario" ? NAV_PROPIETARIO : NAV_INQUILINO;
   const { left, fab, right } = config;

@@ -43,7 +43,7 @@ export default function TopBar() {
     cargar();
   }, [pathname]);
 
-  if (pathname === "/" || pathname === "/login") return null;
+  if (pathname === "/" || pathname === "/login" || pathname === "/modos") return null;
 
   const inicial = nombre ? nombre[0].toUpperCase() : "?";
 
