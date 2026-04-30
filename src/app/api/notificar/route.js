@@ -38,7 +38,7 @@ export async function POST(request) {
   }
 
   const { error } = await resend.emails.send({
-    from: "Rentto <onboarding@resend.dev>",
+    from: "Rentto <noreply@renttove.com>",
     to: email,
     subject: plantilla.subject,
     html: plantilla.html,

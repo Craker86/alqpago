@@ -1,6 +1,17 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 25 abril 2026 (sesión extendida)
+**Última actualización:** 30 abril 2026 (dominio + Resend custom)
+
+## ✅ Completado en sesión 30 abr
+
+### Dominio en producción
+- [x] **Dominio `renttove.com` comprado** (registrador: Cloudflare)
+- [x] **Vercel domains**: `renttove.com` (apex) + `www.renttove.com` (canónico) configurados, ambos con configuración válida
+- [x] **DNS en Cloudflare**: A record `@ → 76.76.21.21` y CNAME `www → cname.vercel-dns.com`, ambos con proxy en gris (DNS only) para que SSL de Vercel funcione
+- [x] **Resend dominio verificado** con DKIM + SPF + DMARC (TXT en `resend._domainkey`, MX/TXT en `send`, TXT en `_dmarc`). Configuración automática de Resend ↔ Cloudflare vía OAuth
+- [x] **Habilitar recepción OFF** en Resend (solo enviamos, no recibimos)
+- [x] **`from` actualizado** a `Rentto <noreply@renttove.com>` en `/api/notificar` — emails ahora llegan a cualquier destinatario, no solo al verificado
+
 
 ## ✅ Completado en sesión 25 abr
 
@@ -38,14 +49,11 @@
 - [ ] Activar "Implementación de vista previa"
 - [ ] Expandir "4 Recomendaciones" en Configuración de implementación
 
-### Acciones tuyas (Externas)
-- [ ] **Comprar dominio propio** (rentto.com o rentto.ve)
-- [ ] Configurar DNS apuntando a Vercel
-- [ ] Verificar dominio en Resend (entonces emails llegan a cualquier destinatario, no solo al verificado)
-
 ### Crecimiento (post-dominio)
-- [ ] Plan de piloto con 10 propiedades en Caracas
+- [ ] Plan de piloto con 10 propiedades en Caracas (10 candidatos definidos + outreach)
 - [ ] Wait-list / landing de marketing con `/modos` como punto central
+- [ ] Probar envío real de email desde producción a un destinatario externo (validar SPF/DKIM/DMARC end-to-end)
+- [ ] Considerar subir DMARC de `p=none` a `p=quarantine` cuando confirmemos que todos los emails legítimos pasan
 
 ## 📋 Decisiones tomadas en esta sesión
 
@@ -76,7 +84,7 @@
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **Comprar dominio + verificar en Resend** (acción tuya, crítica)
-2. **Conectar dominio a Vercel** (post-compra, 30 min de DNS)
-3. **Plan de piloto** — definir 10 candidatos en Caracas, agenda de outreach
-4. **Landing de wait-list** o ajustes a `/modos` para captar interés pre-launch
+1. **Probar email real** — disparar pago_creado/confirmado/rechazado desde producción a Gmail externo. Verificar inbox (no spam) y headers (SPF/DKIM/DMARC pass)
+2. **Plan de piloto** — definir 10 candidatos en Caracas, agenda de outreach
+3. **Landing de wait-list** o ajustes a `/modos` para captar interés pre-launch
+4. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`
