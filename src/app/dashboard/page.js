@@ -41,6 +41,14 @@ export default function Home() {
         .select("*")
         .eq("id", session.user.id)
         .single();
+
+      // Guard de rol: el dashboard es para inquilinos. Si es propietario,
+      // su panel vive en /propietario.
+      if (perfil?.rol === "propietario") {
+        router.replace("/propietario");
+        return;
+      }
+
       if (perfil?.nombre) {
         setNombre(perfil.nombre);
       } else if (session.user.email) {

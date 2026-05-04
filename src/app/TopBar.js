@@ -9,6 +9,7 @@ import { supabase } from "./lib/supabase";
 export default function TopBar() {
   const pathname = usePathname();
   const [nombre, setNombre] = useState("");
+  const [rol, setRol] = useState(null);
   const [unreads, setUnreads] = useState(0);
 
   useEffect(() => {
@@ -18,10 +19,11 @@ export default function TopBar() {
 
       const { data: perfil } = await supabase
         .from("perfiles")
-        .select("nombre")
+        .select("nombre, rol")
         .eq("id", session.user.id)
         .single();
       if (perfil?.nombre) setNombre(perfil.nombre);
+      if (perfil?.rol) setRol(perfil.rol);
 
       // Conteo de notificaciones sin leer del usuario actual
       const { count } = await supabase
@@ -37,11 +39,12 @@ export default function TopBar() {
   if (pathname === "/" || pathname === "/login" || pathname === "/modos") return null;
 
   const inicial = nombre ? nombre[0].toUpperCase() : "?";
+  const inicio = rol === "propietario" ? "/propietario" : "/dashboard";
 
   return (
     <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-stroke">
       <div className="max-w-[480px] mx-auto px-5 py-3 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href={inicio} className="flex items-center gap-2">
           <div className="w-8 h-8 bg-brand-700 text-fg-inverse rounded-lg flex items-center justify-center font-bold text-sm">
             R
           </div>
