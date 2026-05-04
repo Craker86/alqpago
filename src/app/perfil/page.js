@@ -29,6 +29,7 @@ export default function Perfil() {
   const [rol, setRol] = useState("");
   const [scoring, setScoring] = useState(null);
   const [verificacion, setVerificacion] = useState(null);
+  const [esAdmin, setEsAdmin] = useState(false);
 
   const opciones = [
     { Icon: User, nombre: "Datos personales", ruta: "/datos-personales" },
@@ -56,6 +57,7 @@ export default function Perfil() {
       if (perfil) {
         setRol(perfil.rol);
         if (perfil.nombre) setUsuario((prev) => ({ ...prev, nombre: perfil.nombre }));
+        setEsAdmin(!!perfil.es_admin);
       }
 
       // Score solo aplica a inquilinos
@@ -131,6 +133,8 @@ export default function Perfil() {
           <ScoreCard scoring={scoring} />
         )}
 
+        {esAdmin && <AdminCard />}
+
         <nav className="bg-surface border border-stroke rounded-card mt-6 shadow-card overflow-hidden divide-y divide-stroke">
           {opciones.map(({ Icon, nombre, ruta, badge }) => (
             <Link
@@ -160,6 +164,26 @@ export default function Perfil() {
 
       </div>
     </div>
+  );
+}
+
+function AdminCard() {
+  return (
+    <Link
+      href="/admin/verificaciones"
+      className="block bg-fg text-fg-inverse rounded-card p-4 mt-6 shadow-elevated hover:bg-fg/90 transition"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-white/10 rounded-pill flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+          <ShieldCheck size={18} strokeWidth={2.25} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] uppercase tracking-wide opacity-70 font-semibold">Modo admin</p>
+          <p className="text-sm font-bold mt-0.5">Verificaciones por revisar</p>
+        </div>
+        <ArrowRight size={16} className="opacity-80 flex-shrink-0" strokeWidth={2.25} />
+      </div>
+    </Link>
   );
 }
 

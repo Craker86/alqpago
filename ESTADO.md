@@ -1,8 +1,17 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 4 mayo 2026 (KYC Fase 1 — schema + wizard)
+**Última actualización:** 4 mayo 2026 (KYC Fases 1 + 2)
 
 ## ✅ Completado en sesión 4 may
+
+### KYC Fase 2 — Panel admin de revisión
+- [x] **`supabase-verificaciones-trigger.sql`**: trigger `AFTER UPDATE OF estado` en `verificaciones` que crea notificación inbox automática (`verificacion_aprobada` / `verificacion_rechazada` / `verificacion_requiere_reenvio`) respetando `notif_prefs.{tipo}.in_app`
+- [x] **3 plantillas de email nuevas** en `/api/notificar` (subject + HTML con CTA y nota del revisor cuando aplica)
+- [x] **3 nuevos eventos** en `/notificaciones/preferencias` (toggles in_app + email para verificación)
+- [x] **Panel `/admin/verificaciones`** con guard de `es_admin`, tabs por estado (pendiente/reenvío/aprobadas/rechazadas) con contadores, lista expandible
+- [x] **Detalle**: datos de la persona + grid 2-col de previews de docs con URLs firmadas (10 min) + lightbox tap-to-zoom
+- [x] **Acciones**: Aprobar / Pedir reenvío / Rechazar con nota obligatoria. Cliente UPDATE + email respeta prefs del destinatario
+- [x] **Link en `/perfil`** con `AdminCard` oscuro destacado solo si `es_admin`
 
 ### KYC Fase 1 — Verificación de identidad
 - [x] **`supabase-verificaciones.sql`**: tabla `verificaciones` + columna `perfiles.es_admin` (admin = `jesusalcala86@gmail.com`) + bucket Storage privado `verificaciones` + 4 policies RLS por tabla + 4 policies por Storage
@@ -54,7 +63,8 @@
 
 ### Acciones tuyas (Supabase)
 - [ ] Correr `supabase-notif-prefs.sql` (column + helper + triggers actualizados)
-- [ ] Correr `supabase-verificaciones.sql` (tabla verificaciones + bucket privado + es_admin + RLS)
+- [x] ~~Correr `supabase-verificaciones.sql`~~ (corrido)
+- [ ] Correr `supabase-verificaciones-trigger.sql` (trigger inbox al cambiar estado)
 
 ### Acciones tuyas (Vercel UI)
 - [ ] Activar Web Analytics toggle en sidebar "Analítica"
@@ -83,7 +93,8 @@
 3. `supabase-notificaciones.sql` — inbox (ya corrido)
 4. `supabase-perfiles-email.sql` — email column (ya corrido)
 5. `supabase-notif-prefs.sql` — preferencias (**pendiente**)
-6. `supabase-verificaciones.sql` — KYC tabla + bucket + RLS + admin (**pendiente**)
+6. `supabase-verificaciones.sql` — KYC tabla + bucket + RLS + admin (ya corrido)
+7. `supabase-verificaciones-trigger.sql` — trigger notif inbox al cambiar estado (**pendiente**)
 
 ## 📂 Archivos clave en esta sesión
 
@@ -98,9 +109,8 @@
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **KYC Fase 2** — panel `/admin/verificaciones` (lista + revisión lado a lado + aprobar/rechazar con nota) + notificaciones automáticas de aprobación/rechazo
-2. **KYC Fase 3** — integración con scoring (+20 pts si aprobada) y bloqueo de modos Protegido/Premium en `/vincular` si no verificado. Badges "Verificado ✓" en cards de inquilinos y propietarios
-3. **KYC Fase 4** — página `/privacidad` + cron de retención (borrar imágenes >90 días manteniendo metadatos)
-4. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
-5. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
-6. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`
+1. **KYC Fase 3** — integración con scoring (+20 pts si aprobada) y bloqueo de modos Protegido/Premium en `/vincular` si no verificado. Badges "Verificado ✓" en cards de inquilinos y propietarios
+2. **KYC Fase 4** — página `/privacidad` + cron de retención (borrar imágenes >90 días manteniendo metadatos)
+3. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
+4. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
+5. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`

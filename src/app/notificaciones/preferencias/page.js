@@ -12,6 +12,9 @@ import {
   Users,
   Smartphone,
   Mail,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
 } from "lucide-react";
 
 const EVENTOS_INQUILINO = [
@@ -24,11 +27,20 @@ const EVENTOS_PROPIETARIO = [
   { id: "inquilino_vinculado", titulo: "Inquilino vinculado", desc: "Cuando un nuevo inquilino se vincula a tu propiedad", Icon: Users, tone: "brand" },
 ];
 
+const EVENTOS_VERIFICACION = [
+  { id: "verificacion_aprobada", titulo: "Verificación aprobada", desc: "Cuando tu identidad es verificada por el equipo Rentto", Icon: ShieldCheck, tone: "success" },
+  { id: "verificacion_rechazada", titulo: "Verificación rechazada", desc: "Cuando tu solicitud de verificación es rechazada", Icon: ShieldAlert, tone: "danger" },
+  { id: "verificacion_requiere_reenvio", titulo: "Reenvío requerido", desc: "Cuando necesitamos que reenvíes algunos documentos", Icon: ShieldQuestion, tone: "warning" },
+];
+
 const DEFAULT_PREFS = {
   pago_confirmado: { in_app: true, email: true },
   pago_rechazado: { in_app: true, email: true },
   pago_recibido: { in_app: true, email: true },
   inquilino_vinculado: { in_app: true, email: true },
+  verificacion_aprobada: { in_app: true, email: true },
+  verificacion_rechazada: { in_app: true, email: true },
+  verificacion_requiere_reenvio: { in_app: true, email: true },
 };
 
 export default function PreferenciasNotif() {
@@ -92,9 +104,12 @@ export default function PreferenciasNotif() {
     );
   }
 
-  const eventos = rol === "propietario"
-    ? [...EVENTOS_INQUILINO, ...EVENTOS_PROPIETARIO]
-    : EVENTOS_INQUILINO;
+  const eventos = [
+    ...(rol === "propietario"
+      ? [...EVENTOS_INQUILINO, ...EVENTOS_PROPIETARIO]
+      : EVENTOS_INQUILINO),
+    ...EVENTOS_VERIFICACION,
+  ];
 
   return (
     <div className="min-h-screen bg-surface-muted pb-24">

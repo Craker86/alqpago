@@ -135,6 +135,48 @@ function construirPlantilla(tipo, data, appUrl, host) {
         "Ver mis inquilinos"
       );
 
+    case "verificacion_aprobada":
+      return wrap(
+        "Tu identidad fue verificada",
+        "Bienvenido a Rentto verificado",
+        `<p style="font-size: 14px; color: #374151;">Tu cédula y documentos fueron revisados y <strong style="color: #059669;">aprobados</strong>.</p>
+         <p style="font-size: 14px; color: #374151; margin-top: 8px;">Ya puedes vincularte a propiedades en cualquier modo Rentto (Básico, Protegido o Premium) y los propietarios verán el sello "Verificado" en tu perfil.</p>`,
+        `${appUrl}/perfil/verificar`,
+        "Ver mi verificación"
+      );
+
+    case "verificacion_rechazada":
+      return wrap(
+        "Verificación rechazada",
+        "Necesitamos que revises tus documentos",
+        `<p style="font-size: 14px; color: #374151;">Tu solicitud de verificación fue rechazada.</p>
+         ${data.nota
+            ? `<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                <p style="font-size: 12px; color: #991b1b; font-weight: 600; margin: 0 0 4px 0;">Motivo</p>
+                <p style="font-size: 13px; color: #7f1d1d; margin: 0;">${data.nota}</p>
+              </div>`
+            : ""}
+         <p style="font-size: 13px; color: #6b7280; margin-top: 12px;">Revisa los detalles y vuelve a enviar tus documentos cuando estén listos.</p>`,
+        `${appUrl}/perfil/verificar`,
+        "Reenviar documentos"
+      );
+
+    case "verificacion_requiere_reenvio":
+      return wrap(
+        "Reenvía tus documentos",
+        "Algo no quedó claro en tu verificación",
+        `<p style="font-size: 14px; color: #374151;">Necesitamos que reenvíes algunos de tus documentos para completar la verificación.</p>
+         ${data.nota
+            ? `<div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                <p style="font-size: 12px; color: #92400e; font-weight: 600; margin: 0 0 4px 0;">Indicación</p>
+                <p style="font-size: 13px; color: #78350f; margin: 0;">${data.nota}</p>
+              </div>`
+            : ""}
+         <p style="font-size: 13px; color: #6b7280; margin-top: 12px;">Tus datos ya enviados se conservan; solo cambia las fotos que se solicitan.</p>`,
+        `${appUrl}/perfil/verificar`,
+        "Reenviar documentos"
+      );
+
     default:
       return null;
   }
