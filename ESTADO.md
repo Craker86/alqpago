@@ -1,6 +1,18 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 30 abril 2026 (dominio + Resend custom)
+**Última actualización:** 4 mayo 2026 (KYC Fase 1 — schema + wizard)
+
+## ✅ Completado en sesión 4 may
+
+### KYC Fase 1 — Verificación de identidad
+- [x] **`supabase-verificaciones.sql`**: tabla `verificaciones` + columna `perfiles.es_admin` (admin = `jesusalcala86@gmail.com`) + bucket Storage privado `verificaciones` + 4 policies RLS por tabla + 4 policies por Storage
+- [x] **Wizard `/perfil/verificar`** con consentimiento explícito + número de cédula (normalizado V/E/J-XXXXXXXX) + uploads con preview + cámara nativa (`capture="user"` para selfie, `"environment"` para docs)
+- [x] **Documentos por rol**: inquilino pide cédula+selfie+ref. laboral+ref. personal (texto); propietario pide cédula+selfie+comprobante domicilio+documento propiedad
+- [x] **Estados**: `pendiente / aprobada / rechazada / requiere_reenvio`. Re-envío permitido si rechazada o requiere_reenvio
+- [x] **Banner de estado** en el wizard según estado actual
+- [x] **Storage privado**: paths con convención `{user_id}/{tipo}/{timestamp}.{ext}`. URLs firmadas de 5 min para preview de docs ya subidos
+- [x] **Card en `/dashboard`** con 4 estados visuales: sin verificar (CTA brand), pendiente (warning), rechazada/reenvío (danger), aprobada (chip success discreto)
+- [x] **Link en `/perfil`** con badge dinámico al lado del row "Verificar identidad"
 
 ## ✅ Completado en sesión 30 abr
 
@@ -42,6 +54,7 @@
 
 ### Acciones tuyas (Supabase)
 - [ ] Correr `supabase-notif-prefs.sql` (column + helper + triggers actualizados)
+- [ ] Correr `supabase-verificaciones.sql` (tabla verificaciones + bucket privado + es_admin + RLS)
 
 ### Acciones tuyas (Vercel UI)
 - [ ] Activar Web Analytics toggle en sidebar "Analítica"
@@ -70,6 +83,7 @@
 3. `supabase-notificaciones.sql` — inbox (ya corrido)
 4. `supabase-perfiles-email.sql` — email column (ya corrido)
 5. `supabase-notif-prefs.sql` — preferencias (**pendiente**)
+6. `supabase-verificaciones.sql` — KYC tabla + bucket + RLS + admin (**pendiente**)
 
 ## 📂 Archivos clave en esta sesión
 
@@ -84,7 +98,9 @@
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **Probar email real** — disparar pago_creado/confirmado/rechazado desde producción a Gmail externo. Verificar inbox (no spam) y headers (SPF/DKIM/DMARC pass)
-2. **Plan de piloto** — definir 10 candidatos en Caracas, agenda de outreach
-3. **Landing de wait-list** o ajustes a `/modos` para captar interés pre-launch
-4. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`
+1. **KYC Fase 2** — panel `/admin/verificaciones` (lista + revisión lado a lado + aprobar/rechazar con nota) + notificaciones automáticas de aprobación/rechazo
+2. **KYC Fase 3** — integración con scoring (+20 pts si aprobada) y bloqueo de modos Protegido/Premium en `/vincular` si no verificado. Badges "Verificado ✓" en cards de inquilinos y propietarios
+3. **KYC Fase 4** — página `/privacidad` + cron de retención (borrar imágenes >90 días manteniendo metadatos)
+4. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
+5. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
+6. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`

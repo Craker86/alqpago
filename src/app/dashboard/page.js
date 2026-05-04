@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Sparkles,
   XCircle,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import { calcularScore } from "../lib/scoring";
 
@@ -26,6 +28,7 @@ export default function Home() {
   const [tasa, setTasa] = useState(0);
   const [nombre, setNombre] = useState("");
   const [scoring, setScoring] = useState(null);
+  const [verificacion, setVerificacion] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -76,6 +79,13 @@ export default function Home() {
         .maybeSingle();
       if (tasaData) setTasa(tasaData.tasa);
 
+      const { data: verifData } = await supabase
+        .from("verificaciones")
+        .select("estado, nota_revisor")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      setVerificacion(verifData);
+
       setCargando(false);
     }
     cargarDatos();
@@ -110,6 +120,8 @@ export default function Home() {
             {estado.subtitulo}
           </p>
         </header>
+
+        <VerificacionCard verif={verificacion} />
 
         {propiedad ? (
           <HeroDelMes propiedad={propiedad} tasa={tasa} estado={estado} />
@@ -344,6 +356,80 @@ function ScoreMiniCard({ scoring, pagos }) {
         </span>
       )}
       <ArrowRight size={14} className="text-fg-subtle flex-shrink-0" strokeWidth={2.25} />
+    </Link>
+  );
+}
+
+function VerificacionCard({ verif }) {
+  // Caso 1: aprobada → chip discreto verde
+  if (verif?.estado === "aprobada") {
+    return (
+      <div className="inline-flex items-center gap-1.5 bg-success-100 text-success-600 px-3 py-1 rounded-pill text-[11px] font-bold mb-3">
+        <ShieldCheck size={12} strokeWidth={2.5} />
+        Identidad verificada
+      </div>
+    );
+  }
+
+  // Caso 2: pendiente → card amarilla con info, sin CTA principal
+  if (verif?.estado === "pendiente") {
+    return (
+      <Link
+        href="/perfil/verificar"
+        className="flex items-start gap-3 bg-warning-100 text-warning-700 border border-warning-600/20 rounded-card p-4 mt-1 mb-3 shadow-card hover:bg-warning-100/90 transition"
+      >
+        <div className="w-9 h-9 bg-white/40 rounded-pill flex items-center justify-center flex-shrink-0">
+          <Clock size={18} strokeWidth={2.25} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold">Verificación en revisión</p>
+          <p className="text-xs opacity-90 mt-0.5 leading-relaxed">
+            Recibirás un correo cuando esté lista. Suele tomar entre 1 y 24 horas.
+          </p>
+        </div>
+        <ArrowRight size={14} className="opacity-70 self-center flex-shrink-0" strokeWidth={2.25} />
+      </Link>
+    );
+  }
+
+  // Caso 3: rechazada o requiere_reenvio → card roja con CTA
+  if (verif?.estado === "rechazada" || verif?.estado === "requiere_reenvio") {
+    const titulo = verif.estado === "rechazada" ? "Verificación rechazada" : "Reenvía tus documentos";
+    return (
+      <Link
+        href="/perfil/verificar"
+        className="flex items-start gap-3 bg-danger-100 text-danger-600 border border-danger-600/20 rounded-card p-4 mt-1 mb-3 shadow-card hover:bg-danger-100/80 transition"
+      >
+        <div className="w-9 h-9 bg-white/40 rounded-pill flex items-center justify-center flex-shrink-0">
+          <ShieldAlert size={18} strokeWidth={2.25} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold">{titulo}</p>
+          <p className="text-xs opacity-90 mt-0.5 leading-relaxed">
+            {verif.nota_revisor || "Revisa los detalles y vuelve a enviar tus documentos."}
+          </p>
+        </div>
+        <ArrowRight size={14} className="opacity-70 self-center flex-shrink-0" strokeWidth={2.25} />
+      </Link>
+    );
+  }
+
+  // Caso 4: no existe verificación → CTA principal
+  return (
+    <Link
+      href="/perfil/verificar"
+      className="flex items-start gap-3 bg-brand-800 text-fg-inverse rounded-card p-4 mt-1 mb-3 shadow-elevated hover:bg-brand-900 transition"
+    >
+      <div className="w-9 h-9 bg-white/15 rounded-pill flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+        <ShieldCheck size={18} strokeWidth={2.25} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold">Verifica tu identidad</p>
+        <p className="text-xs opacity-85 mt-0.5 leading-relaxed">
+          Sube tu cédula y selfie para subir tu score y acceder a modos avanzados.
+        </p>
+      </div>
+      <ArrowRight size={14} className="opacity-90 self-center flex-shrink-0" strokeWidth={2.25} />
     </Link>
   );
 }

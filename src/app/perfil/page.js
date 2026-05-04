@@ -16,6 +16,9 @@ import {
   ArrowRight,
   LogOut,
   Sparkles,
+  ShieldCheck,
+  Clock,
+  ShieldAlert,
 } from "lucide-react";
 import { calcularScore, toneDeModo } from "../lib/scoring";
 
@@ -25,9 +28,11 @@ export default function Perfil() {
   const [cargando, setCargando] = useState(true);
   const [rol, setRol] = useState("");
   const [scoring, setScoring] = useState(null);
+  const [verificacion, setVerificacion] = useState(null);
 
   const opciones = [
     { Icon: User, nombre: "Datos personales", ruta: "/datos-personales" },
+    { Icon: ShieldCheck, nombre: "Verificar identidad", ruta: "/perfil/verificar", badge: "verificacion" },
     { Icon: FileText, nombre: "Contratos", ruta: "/contrato" },
     { Icon: CreditCard, nombre: "Métodos de pago", ruta: "/metodos-pago" },
     { Icon: Receipt, nombre: "Recibos y facturas", ruta: "/recibos" },
@@ -67,6 +72,13 @@ export default function Perfil() {
           })
         );
       }
+
+      const { data: verif } = await supabase
+        .from("verificaciones")
+        .select("estado")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      setVerificacion(verif);
 
       setCargando(false);
     }
@@ -120,7 +132,7 @@ export default function Perfil() {
         )}
 
         <nav className="bg-surface border border-stroke rounded-card mt-6 shadow-card overflow-hidden divide-y divide-stroke">
-          {opciones.map(({ Icon, nombre, ruta }) => (
+          {opciones.map(({ Icon, nombre, ruta, badge }) => (
             <Link
               href={ruta}
               key={nombre}
@@ -130,6 +142,9 @@ export default function Perfil() {
                 <Icon size={16} className="text-brand-700" strokeWidth={2.25} />
               </div>
               <span className="flex-1 text-sm font-medium text-fg">{nombre}</span>
+              {badge === "verificacion" && (
+                <VerificacionBadge estado={verificacion?.estado} />
+              )}
               <ChevronRight size={16} className="text-fg-subtle" strokeWidth={2} />
             </Link>
           ))}
@@ -145,6 +160,38 @@ export default function Perfil() {
 
       </div>
     </div>
+  );
+}
+
+function VerificacionBadge({ estado }) {
+  if (estado === "aprobada") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-success-100 text-success-600 px-2 py-0.5 rounded-pill">
+        <ShieldCheck size={10} strokeWidth={2.5} />
+        Verificado
+      </span>
+    );
+  }
+  if (estado === "pendiente") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-warning-100 text-warning-700 px-2 py-0.5 rounded-pill">
+        <Clock size={10} strokeWidth={2.5} />
+        En revisión
+      </span>
+    );
+  }
+  if (estado === "rechazada" || estado === "requiere_reenvio") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-danger-100 text-danger-600 px-2 py-0.5 rounded-pill">
+        <ShieldAlert size={10} strokeWidth={2.5} />
+        Atención
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center text-[10px] font-bold bg-brand-100 text-brand-800 px-2 py-0.5 rounded-pill">
+      Sin verificar
+    </span>
   );
 }
 
