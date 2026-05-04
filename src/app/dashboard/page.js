@@ -63,14 +63,6 @@ export default function Home() {
         .order("fecha_pago", { ascending: false });
       setPagos(pagosData || []);
 
-      setScoring(
-        calcularScore({
-          perfil,
-          user: { email: session.user.email, created_at: session.user.created_at },
-          pagos: pagosData || [],
-        })
-      );
-
       const { data: tasaData } = await supabase
         .from("tasa_bcv")
         .select("tasa")
@@ -85,6 +77,15 @@ export default function Home() {
         .eq("user_id", session.user.id)
         .maybeSingle();
       setVerificacion(verifData);
+
+      setScoring(
+        calcularScore({
+          perfil,
+          user: { email: session.user.email, created_at: session.user.created_at },
+          pagos: pagosData || [],
+          verificacion: verifData,
+        })
+      );
 
       setCargando(false);
     }

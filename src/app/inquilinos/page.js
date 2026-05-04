@@ -13,6 +13,7 @@ import {
   Calendar,
   FileText,
   Search,
+  ShieldCheck,
 } from "lucide-react";
 import { calcularScore, toneDeModo } from "../lib/scoring";
 
@@ -54,6 +55,7 @@ export default function Inquilinos() {
       const ids = [...new Set(todas.map((v) => v.inquilino_id))];
       let inquilinosPorId = {};
       let pagosPorInquilino = {};
+      let verifPorInquilino = {};
       if (ids.length > 0) {
         const { data: perfiles } = await supabase
           .from("perfiles")
@@ -69,15 +71,27 @@ export default function Inquilinos() {
           if (!pagosPorInquilino[p.user_id]) pagosPorInquilino[p.user_id] = [];
           pagosPorInquilino[p.user_id].push(p);
         });
+
+        const { data: verifData } = await supabase
+          .from("verificaciones")
+          .select("user_id, estado")
+          .in("user_id", ids);
+        (verifData || []).forEach((v) => { verifPorInquilino[v.user_id] = v; });
       }
 
       const enriquecidas = todas.map((v) => {
         const inquilino = inquilinosPorId[v.inquilino_id] || null;
         const pagosDeEste = pagosPorInquilino[v.inquilino_id] || [];
+        const verifDeEste = verifPorInquilino[v.inquilino_id] || null;
         return {
           ...v,
           inquilino,
-          scoring: calcularScore({ perfil: inquilino, pagos: pagosDeEste }),
+          verificacion: verifDeEste,
+          scoring: calcularScore({
+            perfil: inquilino,
+            pagos: pagosDeEste,
+            verificacion: verifDeEste,
+          }),
         };
       });
 
@@ -172,10 +186,11 @@ export default function Inquilinos() {
 }
 
 function InquilinoCard({ vinculacion, abierto, onToggle }) {
-  const { inquilino, propiedad, estado, inquilino_id, created_at, scoring } = vinculacion;
+  const { inquilino, propiedad, estado, inquilino_id, created_at, scoring, verificacion } = vinculacion;
   const nombre = inquilino?.nombre || `Inquilino ${inquilino_id.substring(0, 6)}…`;
   const inicial = (nombre[0] || "I").toUpperCase();
   const tel = inquilino?.telefono;
+  const verificado = verificacion?.estado === "aprobada";
 
   const statusStyles = {
     activo: "bg-success-100 text-success-600",
@@ -224,11 +239,17 @@ function InquilinoCard({ vinculacion, abierto, onToggle }) {
               <Home size={12} strokeWidth={2} className="text-fg-subtle" />
               {propiedad?.nombre || "—"}
             </p>
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-pill ${modoStyles}`}>
                 {modo}
               </span>
               <span className="text-[10px] font-semibold text-fg-muted">Score {score}/100</span>
+              {verificado && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-success-100 text-success-600 px-2 py-0.5 rounded-pill">
+                  <ShieldCheck size={10} strokeWidth={2.5} />
+                  Verificado
+                </span>
+              )}
             </div>
           </div>
           <div className="flex-shrink-0 self-center text-fg-subtle">

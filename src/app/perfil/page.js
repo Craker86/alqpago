@@ -60,6 +60,13 @@ export default function Perfil() {
         setEsAdmin(!!perfil.es_admin);
       }
 
+      const { data: verif } = await supabase
+        .from("verificaciones")
+        .select("estado")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      setVerificacion(verif);
+
       // Score solo aplica a inquilinos
       if (perfil?.rol !== "propietario") {
         const { data: pagosData } = await supabase
@@ -71,16 +78,10 @@ export default function Perfil() {
             perfil,
             user: { email: session.user.email, created_at: session.user.created_at },
             pagos: pagosData || [],
+            verificacion: verif,
           })
         );
       }
-
-      const { data: verif } = await supabase
-        .from("verificaciones")
-        .select("estado")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-      setVerificacion(verif);
 
       setCargando(false);
     }

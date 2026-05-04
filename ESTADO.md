@@ -1,8 +1,15 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 4 mayo 2026 (KYC Fases 1 + 2)
+**Última actualización:** 4 mayo 2026 (KYC Fases 1 + 2 + 3)
 
 ## ✅ Completado en sesión 4 may
+
+### KYC Fase 3 — Score boost + bloqueo de modos altos
+- [x] **Nuevo criterio "Identidad verificada"** en `lib/scoring.js` con max 20 pts. `calcularScore` acepta `verificacion` opcional. Score sigue capeado a 100 (suma bruta puede llegar a 120 pero se limita)
+- [x] **Bloqueo en `/vincular`**: modos Protegido y Premium requieren verificación aprobada además del score mínimo. Mensaje específico cuando falta solo verificación, solo score, o ambos
+- [x] **Botón dinámico**: "Te faltan X pts" / "Verifica tu identidad primero" / "Confirmar vinculación" según el motivo del bloqueo
+- [x] **Badge "Verificado ✓"** en cards de `/inquilinos` (vista propietario), junto al modo y al score
+- [x] **Verificación propagada a todos los call sites** de calcularScore: dashboard, perfil, contrato, vincular, inquilinos, propiedades
 
 ### KYC Fase 2 — Panel admin de revisión
 - [x] **`supabase-verificaciones-trigger.sql`**: trigger `AFTER UPDATE OF estado` en `verificaciones` que crea notificación inbox automática (`verificacion_aprobada` / `verificacion_rechazada` / `verificacion_requiere_reenvio`) respetando `notif_prefs.{tipo}.in_app`
@@ -109,8 +116,7 @@
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **KYC Fase 3** — integración con scoring (+20 pts si aprobada) y bloqueo de modos Protegido/Premium en `/vincular` si no verificado. Badges "Verificado ✓" en cards de inquilinos y propietarios
-2. **KYC Fase 4** — página `/privacidad` + cron de retención (borrar imágenes >90 días manteniendo metadatos)
+1. **KYC Fase 4** — página `/privacidad` (texto legal explicando uso de datos) + cron de retención (borrar imágenes >90 días manteniendo metadatos)
+2. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
 3. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
-4. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
-5. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`
+4. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`

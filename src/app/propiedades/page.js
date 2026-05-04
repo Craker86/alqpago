@@ -35,10 +35,16 @@ export default function Propiedades() {
 
       // Score solo importa para inquilinos buscando casa
       if (perfil?.rol !== "propietario") {
+        const { data: verifInq } = await supabase
+          .from("verificaciones")
+          .select("estado")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
         const { score } = calcularScore({
           perfil,
           user: { email: session.user.email, created_at: session.user.created_at },
           pagos: pagosRes.data || [],
+          verificacion: verifInq,
         });
         setMyScore(score);
       }

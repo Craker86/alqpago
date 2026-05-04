@@ -82,11 +82,19 @@ export default function Contrato() {
           setHistorial(historialData || []);
         }
 
+        // Verificación del inquilino para que el score refleje el +20
+        const { data: verifInq } = await supabase
+          .from("verificaciones")
+          .select("estado")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+
         setScoring(
           calcularScore({
             perfil,
             user: { email: session.user.email, created_at: session.user.created_at },
             pagos: pagosData || [],
+            verificacion: verifInq,
           })
         );
       }

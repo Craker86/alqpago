@@ -15,8 +15,9 @@ export default function Vincular() {
   const [mensaje, setMensaje] = useState("");
   const [propiedad, setPropiedad] = useState(null);
   const [scoring, setScoring] = useState(null);
+  const [verificacion, setVerificacion] = useState(null);
 
-  // Carga el scoring del inquilino al montar (para tenerlo listo cuando busque)
+  // Carga scoring + verificación del inquilino al montar
   useEffect(() => {
     async function cargarScoring() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -33,11 +34,19 @@ export default function Vincular() {
         .select("*")
         .eq("user_id", session.user.id);
 
+      const { data: verif } = await supabase
+        .from("verificaciones")
+        .select("estado")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      setVerificacion(verif);
+
       setScoring(
         calcularScore({
           perfil,
           user: { email: session.user.email, created_at: session.user.created_at },
           pagos: pagosData || [],
+          verificacion: verif,
         })
       );
     }
@@ -114,7 +123,12 @@ export default function Vincular() {
   const modo = propiedad ? getModo(propiedad.modo) : null;
   const myScore = scoring?.score ?? 0;
   const requerido = modo?.scoreMinimo ?? 0;
-  const calificas = myScore >= requerido;
+  const verificado = verificacion?.estado === "aprobada";
+  // Modos altos (Protegido y Premium) requieren verificación de identidad aprobada
+  const modoExigeVerif = modo?.id === "protegido" || modo?.id === "premium";
+  const verifOk = !modoExigeVerif || verificado;
+  const scoreOk = myScore >= requerido;
+  const calificas = scoreOk && verifOk;
 
   return (
     <div className="min-h-screen bg-surface-muted pb-24">
@@ -190,6 +204,10 @@ export default function Vincular() {
                 requerido={requerido}
                 calificas={calificas}
                 modo={modo}
+                scoreOk={scoreOk}
+                verifOk={verifOk}
+                modoExigeVerif={modoExigeVerif}
+                verifEstado={verificacion?.estado}
               />
 
               {mensaje && (
@@ -213,7 +231,9 @@ export default function Vincular() {
                   ? "Vinculando…"
                   : calificas
                     ? "Confirmar vinculación"
-                    : `Te faltan ${requerido - myScore} pts`}
+                    : !scoreOk
+                      ? `Te faltan ${requerido - myScore} pts`
+                      : "Verifica tu identidad primero"}
               </button>
               <button
                 onClick={() => { setPropiedad(null); setCodigo(""); setMensaje(""); }}
@@ -251,7 +271,10 @@ function ModoBanner({ modo }) {
   );
 }
 
-function ScoreCheck({ myScore, requerido, calificas, modo }) {
+function ScoreCheck({
+  myScore, requerido, calificas, modo,
+  scoreOk, verifOk, modoExigeVerif, verifEstado,
+}) {
   if (calificas) {
     return (
       <div className="bg-success-100 text-success-600 rounded-card p-3 flex items-center gap-2.5">
@@ -259,14 +282,15 @@ function ScoreCheck({ myScore, requerido, calificas, modo }) {
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold">Calificas para modo {modo.label}</p>
           <p className="text-[11px]">
-            Tu score es <span className="font-bold">{myScore}</span> · Mínimo requerido: {requerido}
+            Tu score: <span className="font-bold">{myScore}</span> · Mínimo: {requerido}
+            {modoExigeVerif && " · Identidad verificada ✓"}
           </p>
         </div>
       </div>
     );
   }
 
-  const faltan = requerido - myScore;
+  // No califica: armar lista de motivos
   return (
     <div className="bg-warning-100 text-warning-700 rounded-card p-3">
       <div className="flex items-center gap-2.5">
@@ -274,19 +298,45 @@ function ScoreCheck({ myScore, requerido, calificas, modo }) {
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold">No calificas para este modo todavía</p>
           <p className="text-[11px]">
-            Tu score: <span className="font-bold">{myScore}</span> · Requerido: {requerido} · Faltan {faltan} pts
+            Tu score: <span className="font-bold">{myScore}</span> · Requerido: {requerido}
           </p>
         </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-warning-700/20 text-[11px] leading-relaxed">
-        <p className="font-semibold mb-1">Para subir tu score:</p>
-        <ul className="space-y-0.5 ml-3 list-disc">
-          <li>Completa tu perfil (nombre + teléfono)</li>
-          <li>Cada pago confirmado a tiempo suma 7 pts</li>
-          <li>Mantén pagos sin pendientes &gt;7 días</li>
-          <li>Pídele a tu propietario una propiedad de modo más bajo (Básico requiere 50 pts)</li>
-        </ul>
-      </div>
+
+      {!scoreOk && (
+        <div className="mt-3 pt-3 border-t border-warning-700/20 text-[11px] leading-relaxed">
+          <p className="font-semibold mb-1">Para subir tu score ({requerido - myScore} pts faltan):</p>
+          <ul className="space-y-0.5 ml-3 list-disc">
+            <li>Completa tu perfil (nombre + teléfono)</li>
+            <li>Cada pago confirmado a tiempo suma 7 pts</li>
+            <li>Verifica tu identidad para ganar +20 pts</li>
+            <li>Mantén pagos sin pendientes &gt;7 días</li>
+            <li>Pídele a tu propietario una propiedad de modo más bajo (Básico requiere 50 pts)</li>
+          </ul>
+        </div>
+      )}
+
+      {!verifOk && (
+        <div className="mt-3 pt-3 border-t border-warning-700/20">
+          <p className="text-[11px] font-semibold mb-1">
+            El modo {modo.label} requiere verificación de identidad
+          </p>
+          <p className="text-[11px] mb-2">
+            {verifEstado === "pendiente"
+              ? "Tu solicitud está en revisión. Te avisaremos cuando esté lista."
+              : verifEstado === "rechazada" || verifEstado === "requiere_reenvio"
+                ? "Tu solicitud anterior fue rechazada. Reenvía tus documentos."
+                : "Sube tu cédula y selfie para que un admin de Rentto te apruebe."}
+          </p>
+          <Link
+            href="/perfil/verificar"
+            className="inline-flex items-center justify-center gap-1.5 text-[11px] font-bold bg-warning-700 text-fg-inverse px-3 py-1.5 rounded-pill"
+          >
+            <ShieldCheck size={12} strokeWidth={2.5} />
+            {verifEstado ? "Ver mi verificación" : "Verificar identidad"}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

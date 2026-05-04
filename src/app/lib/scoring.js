@@ -9,6 +9,7 @@ export const CRITERIOS = [
   { key: "pagosPuntuales", label: "Pagos confirmados", max: 40, desc: "Historial de cobros aprobados" },
   { key: "sinRechazos", label: "Sin rechazos", max: 10, desc: "Ningún pago rechazado" },
   { key: "sinPendientesViejos", label: "Resolvés a tiempo", max: 10, desc: "Sin pendientes >7 días" },
+  { key: "identidadVerificada", label: "Identidad verificada", max: 20, desc: "Cédula y selfie aprobadas por Rentto" },
 ];
 
 export const UMBRALES = {
@@ -26,12 +27,13 @@ const DIA = 1000 * 60 * 60 * 24;
 
 /**
  * @param {Object} args
- * @param {Object} [args.perfil]   - { nombre, telefono, created_at }
- * @param {Object} [args.user]     - { email, created_at }  (solo para vista propia)
- * @param {Array}  [args.pagos]    - [{ estado, fecha_pago, created_at }]
- * @returns {{ score: number, modo: string, desglose: Object }}
+ * @param {Object} [args.perfil]        - { nombre, telefono, created_at }
+ * @param {Object} [args.user]          - { email, created_at }  (solo para vista propia)
+ * @param {Array}  [args.pagos]         - [{ estado, fecha_pago, created_at }]
+ * @param {Object} [args.verificacion]  - { estado: 'aprobada' | ... } | null
+ * @returns {{ score: number, modo: string, desglose: Object, verificado: boolean }}
  */
-export function calcularScore({ perfil, user, pagos = [] } = {}) {
+export function calcularScore({ perfil, user, pagos = [], verificacion = null } = {}) {
   const desglose = {
     perfilCompleto: 0,
     emailTipo: 0,
@@ -39,6 +41,7 @@ export function calcularScore({ perfil, user, pagos = [] } = {}) {
     pagosPuntuales: 0,
     sinRechazos: 0,
     sinPendientesViejos: 0,
+    identidadVerificada: 0,
   };
 
   // 1. Perfil completo
@@ -82,14 +85,22 @@ export function calcularScore({ perfil, user, pagos = [] } = {}) {
     desglose.sinPendientesViejos = 10;
   }
 
-  const score = Object.values(desglose).reduce((s, v) => s + v, 0);
+  // 7. Identidad verificada (boost de hasta 20 pts)
+  const verificado = verificacion?.estado === "aprobada";
+  if (verificado) {
+    desglose.identidadVerificada = 20;
+  }
+
+  // El máximo teórico es 120; lo cap a 100 para mantener la barra y los umbrales claros.
+  const sumaBruta = Object.values(desglose).reduce((s, v) => s + v, 0);
+  const score = Math.min(100, sumaBruta);
 
   let modo = "En construcción";
   if (score >= UMBRALES.premium) modo = "Premium";
   else if (score >= UMBRALES.protegido) modo = "Protegido";
   else if (score >= UMBRALES.basico) modo = "Básico";
 
-  return { score, modo, desglose };
+  return { score, modo, desglose, verificado };
 }
 
 /** Color/tone asociado al modo, para usar con tokens del design system. */
