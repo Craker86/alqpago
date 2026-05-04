@@ -12,8 +12,34 @@
 -- Respeta notif_prefs.{tipo}.in_app del usuario (igual que los otros
 -- triggers).
 --
--- Idempotente.
+-- Idempotente. Self-contained: si `user_quiere_notif` y la columna
+-- `notif_prefs` no existen aún, las crea con defaults seguros.
 -- ========================================================================
+
+
+-- 0. Dependencias (defensivas — si supabase-notif-prefs.sql no se corrió aún)
+ALTER TABLE public.perfiles
+  ADD COLUMN IF NOT EXISTS notif_prefs JSONB DEFAULT NULL;
+
+CREATE OR REPLACE FUNCTION public.user_quiere_notif(
+  p_user_id uuid,
+  p_evento text,
+  p_canal text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_prefs jsonb;
+BEGIN
+  SELECT notif_prefs INTO v_prefs FROM public.perfiles WHERE id = p_user_id;
+  IF v_prefs IS NULL THEN RETURN TRUE; END IF;
+  RETURN COALESCE((v_prefs->p_evento->>p_canal)::boolean, TRUE);
+END;
+$$;
 
 
 CREATE OR REPLACE FUNCTION public.notif_verificacion_cambio_estado()
