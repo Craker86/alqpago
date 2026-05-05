@@ -31,7 +31,7 @@ const NAV_PROPIETARIO = {
     { href: "/propietario", label: "Inicio", Icon: Home },
     { href: "/estadisticas", label: "Stats", Icon: BarChart3 },
   ],
-  fab: { href: "/propietario#pendientes", label: "Cobrar", Icon: Banknote },
+  fab: { href: "/cobros", label: "Cobrar", Icon: Banknote },
   right: [
     { href: "/propiedades", label: "Explorar", Icon: Building2 },
     { href: "/perfil", label: "Perfil", Icon: User },
@@ -81,7 +81,7 @@ export default function NavBar() {
   const config = rol === "propietario" ? NAV_PROPIETARIO : NAV_INQUILINO;
   const { left, fab, right } = config;
   const showBadge = rol === "propietario" && pendientes > 0;
-  const fabActive = pathname === fab.href || pathname + "#pendientes" === fab.href;
+  const fabActive = pathname === fab.href;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-stroke max-w-[480px] mx-auto">
