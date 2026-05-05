@@ -1,8 +1,17 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 4 mayo 2026 (KYC Fases 1 + 2 + 3)
+**Última actualización:** 4 mayo 2026 (KYC 1+2+3 + UX propietario)
 
 ## ✅ Completado en sesión 4 may
+
+### UX propietario — `/cobros` dedicado y guards de rol
+- [x] **`/dashboard` ahora chequea rol** y rebota a `/propietario` si el usuario es propietario. Antes podías terminar viendo contenido de inquilino con la nav del propietario por entrar por URL directa, link de "Volver", o pase de cuenta
+- [x] **`TopBar` logo role-aware**: apunta a `/propietario` o `/dashboard` según rol, sin rebote
+- [x] **`NavBar` reactiva al `pathname`**: el rol se refresca en cada navegación. Antes se cargaba una sola vez al montar y quedaba con rol viejo (o `null` = default inquilino) tras login/logout
+- [x] **FAB del propietario es "Cobrar"** (icono `Banknote`, antes era "Publicar"). Lleva a `/cobros` con badge rojo si hay pagos pendientes (count en NavBar via `propiedades!inner(user_id)`)
+- [x] **Página dedicada `/cobros`**: card grande por pago pendiente con avatar del inquilino + badge "Verificado" (si KYC aprobado) + propiedad + monto destacado + comprobante embed (no link) + botones grandes Confirmar/Rechazar. Empty state celebratorio "¡Estás al día!" + sección "Procesados hoy" (últimas 24h) como feedback de qué se hizo
+- [x] **Acceso a "Publicar"**: link discreto `+ Publicar` en header de "Mis propiedades"; CTA dashed "Publicar tu primer inmueble" cuando 0 propiedades
+- [x] **Email respeta `notif_prefs.{tipo}.email`** en `/cobros` igual que en panel
 
 ### KYC Fase 3 — Score boost + bloqueo de modos altos
 - [x] **Nuevo criterio "Identidad verificada"** en `lib/scoring.js` con max 20 pts. `calcularScore` acepta `verificacion` opcional. Score sigue capeado a 100 (suma bruta puede llegar a 120 pero se limita)
@@ -69,9 +78,9 @@
 ## ⏳ Pendiente
 
 ### Acciones tuyas (Supabase)
-- [ ] Correr `supabase-notif-prefs.sql` (column + helper + triggers actualizados)
+- [x] ~~Correr `supabase-notif-prefs.sql`~~ (corrido)
 - [x] ~~Correr `supabase-verificaciones.sql`~~ (corrido)
-- [ ] Correr `supabase-verificaciones-trigger.sql` (trigger inbox al cambiar estado)
+- [x] ~~Correr `supabase-verificaciones-trigger.sql`~~ (corrido)
 
 ### Acciones tuyas (Vercel UI)
 - [ ] Activar Web Analytics toggle en sidebar "Analítica"
@@ -99,9 +108,11 @@
 2. `supabase-score-trigger.sql` — trigger de score (ya corrido)
 3. `supabase-notificaciones.sql` — inbox (ya corrido)
 4. `supabase-perfiles-email.sql` — email column (ya corrido)
-5. `supabase-notif-prefs.sql` — preferencias (**pendiente**)
+5. `supabase-notif-prefs.sql` — preferencias (ya corrido)
 6. `supabase-verificaciones.sql` — KYC tabla + bucket + RLS + admin (ya corrido)
-7. `supabase-verificaciones-trigger.sql` — trigger notif inbox al cambiar estado (**pendiente**)
+7. `supabase-verificaciones-trigger.sql` — trigger notif inbox al cambiar estado (ya corrido)
+
+**Todos los SQL están al día. No hay nada pendiente de correr en Supabase.**
 
 ## 📂 Archivos clave en esta sesión
 
