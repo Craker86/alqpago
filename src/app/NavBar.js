@@ -10,7 +10,7 @@ import {
   FileText,
   User,
   BarChart3,
-  Plus,
+  Banknote,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
@@ -31,7 +31,7 @@ const NAV_PROPIETARIO = {
     { href: "/propietario", label: "Inicio", Icon: Home },
     { href: "/estadisticas", label: "Stats", Icon: BarChart3 },
   ],
-  fab: { href: "/nueva-propiedad", label: "Publicar", Icon: Plus },
+  fab: { href: "/propietario#pendientes", label: "Cobrar", Icon: Banknote },
   right: [
     { href: "/propiedades", label: "Explorar", Icon: Building2 },
     { href: "/perfil", label: "Perfil", Icon: User },
@@ -41,25 +41,47 @@ const NAV_PROPIETARIO = {
 export default function NavBar() {
   const pathname = usePathname();
   const [rol, setRol] = useState(null);
+  const [pendientes, setPendientes] = useState(0);
 
   useEffect(() => {
+    let cancelado = false;
     async function cargar() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session || cancelado) {
+        if (!cancelado) { setRol(null); setPendientes(0); }
+        return;
+      }
       const { data: perfil } = await supabase
         .from("perfiles")
         .select("rol")
         .eq("id", session.user.id)
         .single();
-      if (perfil?.rol) setRol(perfil.rol);
+      if (cancelado) return;
+      const r = perfil?.rol || null;
+      setRol(r);
+
+      // Conteo de pagos pendientes para el badge del FAB del propietario
+      if (r === "propietario") {
+        const { count } = await supabase
+          .from("pagos")
+          .select("*, propiedades!inner(user_id)", { count: "exact", head: true })
+          .eq("estado", "pendiente")
+          .eq("propiedades.user_id", session.user.id);
+        if (!cancelado && typeof count === "number") setPendientes(count);
+      } else {
+        setPendientes(0);
+      }
     }
     cargar();
-  }, []);
+    return () => { cancelado = true; };
+  }, [pathname]);
 
   if (pathname === "/" || pathname === "/login" || pathname === "/modos") return null;
 
   const config = rol === "propietario" ? NAV_PROPIETARIO : NAV_INQUILINO;
   const { left, fab, right } = config;
+  const showBadge = rol === "propietario" && pendientes > 0;
+  const fabActive = pathname === fab.href || pathname + "#pendientes" === fab.href;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-stroke max-w-[480px] mx-auto">
@@ -74,13 +96,22 @@ export default function NavBar() {
 
         <Link
           href={fab.href}
-          aria-label={fab.label}
+          aria-label={
+            showBadge
+              ? `${fab.label} (${pendientes} pago${pendientes === 1 ? "" : "s"} pendiente${pendientes === 1 ? "" : "s"})`
+              : fab.label
+          }
           className={`absolute left-1/2 -translate-x-1/2 -top-7 flex flex-col items-center gap-1 transition ${
-            pathname === fab.href ? "scale-[1.03]" : ""
+            fabActive ? "scale-[1.03]" : ""
           }`}
         >
-          <span className="w-14 h-14 rounded-pill bg-brand-800 text-fg-inverse flex items-center justify-center shadow-pop ring-4 ring-surface hover:bg-brand-900 transition">
+          <span className="relative w-14 h-14 rounded-pill bg-brand-800 text-fg-inverse flex items-center justify-center shadow-pop ring-4 ring-surface hover:bg-brand-900 transition">
             <fab.Icon size={22} strokeWidth={2.25} />
+            {showBadge && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 bg-danger-600 text-white rounded-pill text-[10px] font-bold flex items-center justify-center ring-2 ring-surface">
+                {pendientes > 9 ? "9+" : pendientes}
+              </span>
+            )}
           </span>
           <span className="text-[10px] font-semibold text-brand-800">
             {fab.label}

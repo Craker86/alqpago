@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   ShieldPlus,
   Download,
+  Plus,
 } from "lucide-react";
 import { MODOS_LISTA, getModo, toneDeModo as toneDeModoProp } from "../lib/modos";
 
@@ -268,9 +269,30 @@ export default function Propietario() {
           </section>
         )}
 
+        {propiedades.length === 0 && (
+          <Link
+            href="/nueva-propiedad"
+            className="flex items-center justify-center gap-2 bg-surface border border-dashed border-brand-300 rounded-card p-4 mt-6 hover:bg-brand-50 transition"
+          >
+            <Plus size={16} className="text-brand-700" strokeWidth={2.5} />
+            <div className="text-left">
+              <p className="text-sm font-semibold text-brand-700">Publicar tu primer inmueble</p>
+              <p className="text-xs text-fg-muted mt-0.5">Empieza a recibir solicitudes en minutos</p>
+            </div>
+          </Link>
+        )}
+
         {propiedades.length > 0 && (
           <section className="mt-6">
-            <h2 className="text-sm font-semibold text-fg mb-3">Mis propiedades</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-fg">Mis propiedades</h2>
+              <Link
+                href="/nueva-propiedad"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800 transition"
+              >
+                <Plus size={12} strokeWidth={2.5} /> Publicar
+              </Link>
+            </div>
             <div className="flex flex-col gap-3">
               {propiedades.map((prop) => (
                 <article key={prop.id} className="bg-surface rounded-card shadow-card p-4">
