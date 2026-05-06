@@ -21,20 +21,21 @@ import {
   Loader2,
   Trash2,
 } from "lucide-react";
+import LiveSelfieCapture from "./LiveSelfieCapture";
 
 // Tipos de documento por rol. Cada uno define { key, label, descripcion, icon, captureMode }
 // captureMode: "user" = cámara frontal (selfie), "environment" = cámara trasera (docs), null = cualquier archivo
 const DOCS_INQUILINO = [
   { key: "cedula_frente", label: "Cédula — frente", desc: "Foto clara del frente de tu cédula", Icon: CreditCard, capture: "environment" },
   { key: "cedula_dorso", label: "Cédula — dorso", desc: "Foto del dorso de tu cédula", Icon: CreditCard, capture: "environment" },
-  { key: "selfie", label: "Selfie con tu cara", desc: "Tómate una foto sosteniendo el teléfono frente a ti", Icon: Camera, capture: "user" },
+  { key: "selfie", label: "Selfie en vivo", desc: "Activamos tu cámara y te pedimos un gesto rápido para verificar que sos vos en este momento", Icon: Camera, live: true },
   { key: "referencia_laboral", label: "Referencia laboral", desc: "Foto de tu carnet de trabajo o constancia de empleo", Icon: Briefcase, capture: "environment" },
 ];
 
 const DOCS_PROPIETARIO = [
   { key: "cedula_frente", label: "Cédula — frente", desc: "Foto clara del frente de tu cédula", Icon: CreditCard, capture: "environment" },
   { key: "cedula_dorso", label: "Cédula — dorso", desc: "Foto del dorso de tu cédula", Icon: CreditCard, capture: "environment" },
-  { key: "selfie", label: "Selfie con tu cara", desc: "Tómate una foto sosteniendo el teléfono frente a ti", Icon: Camera, capture: "user" },
+  { key: "selfie", label: "Selfie en vivo", desc: "Activamos tu cámara y te pedimos un gesto rápido para verificar que sos vos en este momento", Icon: Camera, live: true },
   { key: "comprobante_domicilio", label: "Comprobante de domicilio", desc: "Recibo de CANTV, Movistar, agua o luz a tu nombre (últimos 3 meses)", Icon: HomeIcon, capture: "environment" },
   { key: "documento_propiedad", label: "Documento de propiedad", desc: "Foto del documento que acredita que eres dueño (escritura, contrato, recibo de condominio a tu nombre)", Icon: FileText, capture: "environment" },
 ];
@@ -456,6 +457,7 @@ function DatosPersonales({
 function DocCard({ doc, userId, archivoLocal, pathRemoto, onSeleccionar, onRemover, disabled }) {
   const inputRef = useRef(null);
   const [previewRemoto, setPreviewRemoto] = useState(null);
+  const [liveAbierto, setLiveAbierto] = useState(false);
 
   // Si hay path remoto, generar URL firmada (5 min)
   useEffect(() => {
@@ -476,63 +478,98 @@ function DocCard({ doc, userId, archivoLocal, pathRemoto, onSeleccionar, onRemov
 
   const preview = archivoLocal?.previewUrl || previewRemoto;
   const tieneAlgo = !!preview;
+  const esLive = !!doc.live;
+
+  function activar() {
+    if (esLive) setLiveAbierto(true);
+    else inputRef.current?.click();
+  }
+
+  function onLiveCapture(file) {
+    setLiveAbierto(false);
+    onSeleccionar(file);
+  }
+
+  const labelBoton = esLive
+    ? tieneAlgo ? "Repetir selfie" : "Tomar selfie en vivo"
+    : tieneAlgo ? "Cambiar foto" : "Tomar foto / Subir";
 
   return (
-    <div className="bg-surface border border-stroke rounded-card p-3 shadow-card">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 bg-brand-50 rounded-pill flex items-center justify-center flex-shrink-0">
-          <doc.Icon size={18} className="text-brand-700" strokeWidth={2.25} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-fg">{doc.label}</p>
-          <p className="text-[11px] text-fg-muted mt-0.5 leading-relaxed">{doc.desc}</p>
-
-          {preview && (
-            <div className="relative mt-2 rounded-xl overflow-hidden bg-surface-subtle border border-stroke">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={preview}
-                alt={doc.label}
-                className="w-full max-h-48 object-contain"
-              />
-              {archivoLocal && !disabled && (
-                <button
-                  type="button"
-                  onClick={onRemover}
-                  className="absolute top-2 right-2 w-7 h-7 bg-surface/90 backdrop-blur rounded-pill flex items-center justify-center text-danger-600 shadow-card hover:bg-danger-100 transition"
-                  aria-label="Quitar imagen"
-                >
-                  <Trash2 size={14} strokeWidth={2.25} />
-                </button>
+    <>
+      <div className="bg-surface border border-stroke rounded-card p-3 shadow-card">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-brand-50 rounded-pill flex items-center justify-center flex-shrink-0">
+            <doc.Icon size={18} className="text-brand-700" strokeWidth={2.25} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-sm font-semibold text-fg">{doc.label}</p>
+              {esLive && (
+                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-danger-100 text-danger-600 px-1.5 py-0.5 rounded-pill uppercase tracking-wide">
+                  <span className="w-1 h-1 rounded-pill bg-danger-600 animate-pulse" />
+                  En vivo
+                </span>
               )}
             </div>
-          )}
+            <p className="text-[11px] text-fg-muted mt-0.5 leading-relaxed">{doc.desc}</p>
 
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            capture={doc.capture || undefined}
-            onChange={(e) => onSeleccionar(e.target.files?.[0])}
-            disabled={disabled}
-            className="hidden"
-          />
-          {!disabled && (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className={`mt-2 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-pill border transition ${
-                tieneAlgo
-                  ? "border-stroke text-fg-muted hover:bg-surface-subtle"
-                  : "border-brand-700 text-brand-700 hover:bg-brand-50"
-              }`}
-            >
-              <FileImage size={12} strokeWidth={2.25} />
-              {tieneAlgo ? "Cambiar foto" : "Tomar foto / Subir"}
-            </button>
-          )}
+            {preview && (
+              <div className="relative mt-2 rounded-xl overflow-hidden bg-surface-subtle border border-stroke">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={preview}
+                  alt={doc.label}
+                  className="w-full max-h-48 object-contain"
+                />
+                {archivoLocal && !disabled && (
+                  <button
+                    type="button"
+                    onClick={onRemover}
+                    className="absolute top-2 right-2 w-7 h-7 bg-surface/90 backdrop-blur rounded-pill flex items-center justify-center text-danger-600 shadow-card hover:bg-danger-100 transition"
+                    aria-label="Quitar imagen"
+                  >
+                    <Trash2 size={14} strokeWidth={2.25} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!esLive && (
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                capture={doc.capture || undefined}
+                onChange={(e) => onSeleccionar(e.target.files?.[0])}
+                disabled={disabled}
+                className="hidden"
+              />
+            )}
+
+            {!disabled && (
+              <button
+                type="button"
+                onClick={activar}
+                className={`mt-2 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-pill border transition ${
+                  tieneAlgo
+                    ? "border-stroke text-fg-muted hover:bg-surface-subtle"
+                    : "border-brand-700 text-brand-700 hover:bg-brand-50"
+                }`}
+              >
+                {esLive ? <Camera size={12} strokeWidth={2.25} /> : <FileImage size={12} strokeWidth={2.25} />}
+                {labelBoton}
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {liveAbierto && (
+        <LiveSelfieCapture
+          onCapture={onLiveCapture}
+          onCancel={() => setLiveAbierto(false)}
+        />
+      )}
+    </>
   );
 }

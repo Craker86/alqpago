@@ -1,6 +1,18 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 4 mayo 2026 (KYC 1+2+3 + UX propietario)
+**Última actualización:** 5 mayo 2026 (KYC live capture + gesto)
+
+## ✅ Completado en sesión 5 may
+
+### KYC Fase 3.5 — Captura de selfie en vivo + liveness por gesto
+- [x] **Componente `LiveSelfieCapture`** con `getUserMedia` (cámara frontal, 1280×720 ideal). 5 estados: solicitando / preparando / centrando / listo / preview / error
+- [x] **Liveness por gesto random**: 5 gestos posibles (mirá izquierda/derecha/arriba, sonreí, parpadeá). Aleatorio por sesión, mostrado durante 3 s
+- [x] **Etapas guiadas**: 3 s gesto → 2 s "mirá a la cámara" → botón Capturar habilitado
+- [x] **Marco circular guía** + countdown visible para guiar al usuario
+- [x] **Espejo horizontal** (`scaleX(-1)`) en preview Y en captura para que la foto coincida con la vista del usuario
+- [x] **Manejo de errores**: NotAllowedError (denied), NotFoundError (sin cámara), NotReadableError (cámara ocupada por otra app), navegador sin getUserMedia
+- [x] **Cleanup**: stream.getTracks().forEach(stop) al cancelar/aceptar/desmontar
+- [x] **Integración en `/perfil/verificar`**: solo el selfie es live (cédula y otros docs siguen como upload). Badge rojo "EN VIVO" pulsante en la card. Botón "Tomar selfie en vivo" abre el modal fullscreen
 
 ## ✅ Completado en sesión 4 may
 
@@ -127,7 +139,9 @@
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **KYC Fase 4** — página `/privacidad` (texto legal explicando uso de datos) + cron de retención (borrar imágenes >90 días manteniendo metadatos)
-2. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
-3. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
-4. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`
+1. **Probar live capture end-to-end** desde mobile (Android Chrome + iOS Safari) y desktop. Si todo bien, KYC queda muy sólido para piloto
+2. **KYC Fase 4** — página `/privacidad` (texto legal explicando uso de datos) + cron de retención (borrar imágenes >90 días manteniendo metadatos)
+3. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
+4. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
+5. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`
+6. **(Crecimiento)** Sumar match biométrico automático con AWS Rekognition (~$0.001/check) cuando volumen lo justifique. Plan B: face-api.js (gratis, browser, menos preciso)
