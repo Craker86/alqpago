@@ -1,8 +1,15 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 5 mayo 2026 (KYC live capture + gesto)
+**Última actualización:** 5 mayo 2026 (KYC live capture + Fase 4 privacidad)
 
 ## ✅ Completado en sesión 5 may
+
+### KYC Fase 4 — Privacidad y retención
+- [x] **Página pública `/privacidad`** con texto legal completo (LOPPDP VE + buenas prácticas RGPD): qué datos recolectamos, base legal, almacenamiento cifrado, retención por tipo, terceros (Supabase/Vercel/Resend/Cloudflare), derechos del titular, cookies, contacto `privacidad@renttove.com`
+- [x] **API `/api/cron/cleanup-verificaciones`**: route handler con `createClient(service_role)` para bypassear RLS. Borra archivos del bucket >90 días post-`reviewed_at` para verificaciones aprobadas/rechazadas. Mantiene metadatos (estado, cédula, fecha, revisor) y escribe nota explicativa. Idempotente
+- [x] **Auth del cron**: header `Authorization: Bearer ${CRON_SECRET}` requerido. Devuelve 401 sin token o env var ausente
+- [x] **`vercel.json`** con `crons: [{ path, schedule: "0 4 * * *" }]` — corre diario a las 4:00 UTC (00:00 hora VE)
+- [x] **Links a `/privacidad`** desde 3 puntos: footer del landing (`/`), checkbox del signup en `/login`, bloque de consentimiento en `/perfil/verificar`
 
 ### KYC Fase 3.5 — Captura de selfie en vivo + liveness por gesto
 - [x] **Componente `LiveSelfieCapture`** con `getUserMedia` (cámara frontal, 1280×720 ideal). 5 estados: solicitando / preparando / centrando / listo / preview / error
@@ -94,6 +101,10 @@
 - [x] ~~Correr `supabase-verificaciones.sql`~~ (corrido)
 - [x] ~~Correr `supabase-verificaciones-trigger.sql`~~ (corrido)
 
+### Acciones tuyas (Vercel env vars)
+- [ ] **Agregar `CRON_SECRET`** en Vercel → Settings → Environment Variables. Generá un string random largo (~32 chars). El cron de retención lo usa para autenticar el llamado
+- [ ] **Agregar `SUPABASE_SERVICE_ROLE_KEY`** en Vercel → Settings → Environment Variables. Lo encontrás en Supabase → Project Settings → API → "service_role" key (la **secreta**, no la anon). El cron lo usa para borrar archivos del bucket bypassando RLS
+
 ### Acciones tuyas (Vercel UI)
 - [ ] Activar Web Analytics toggle en sidebar "Analítica"
 - [ ] Activar Speed Insights toggle en "Información sobre velocidad"
@@ -139,9 +150,11 @@
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **Probar live capture end-to-end** desde mobile (Android Chrome + iOS Safari) y desktop. Si todo bien, KYC queda muy sólido para piloto
-2. **KYC Fase 4** — página `/privacidad` (texto legal explicando uso de datos) + cron de retención (borrar imágenes >90 días manteniendo metadatos)
-3. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach
-4. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
-5. **Subir DMARC** a `p=quarantine` después de 1-2 semanas de monitoreo en `p=none`
-6. **(Crecimiento)** Sumar match biométrico automático con AWS Rekognition (~$0.001/check) cuando volumen lo justifique. Plan B: face-api.js (gratis, browser, menos preciso)
+1. **Configurar env vars en Vercel** (`CRON_SECRET` + `SUPABASE_SERVICE_ROLE_KEY`) para que el cron de retención funcione
+2. **Probar live capture end-to-end** desde mobile (Android Chrome + iOS Safari) y desktop
+3. **Probar el cron manualmente** (`curl` con `Authorization: Bearer ${CRON_SECRET}`) antes de esperar el schedule diario
+4. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach (acción operativa, no técnica)
+5. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
+6. **Subir DMARC** a `p=quarantine` después de 1-2 semanas en `p=none`
+7. **(Crecimiento)** Sumar match biométrico automático con AWS Rekognition (~$0.001/check) cuando volumen lo justifique. Plan B: face-api.js (gratis, browser, menos preciso)
+8. **(Crecimiento)** Crear `privacidad@renttove.com` como inbox real (vía Resend o forward a Gmail) para responder solicitudes de derechos del titular

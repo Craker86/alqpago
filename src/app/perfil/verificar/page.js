@@ -387,7 +387,17 @@ function ConsentimientoCard({ aceptado, onChange, disabled }) {
           <p className="text-[11px] text-fg-muted mt-1 leading-relaxed">
             Autorizo a Rentto a almacenar y revisar mi cédula y los demás documentos enviados con
             el único fin de verificar mi identidad. Las imágenes se guardan en almacenamiento
-            privado y se borran 90 días después de la aprobación.
+            privado y se borran <strong>90 días después de la aprobación</strong>. Detalles
+            completos en nuestra{" "}
+            <a
+              href="/privacidad"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-700 font-semibold hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              política de privacidad
+            </a>.
           </p>
         </div>
       </div>

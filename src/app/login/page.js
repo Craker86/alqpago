@@ -257,7 +257,12 @@ export default function Login() {
                       Términos y Condiciones
                     </a>{" "}
                     y la{" "}
-                    <a href="#" className="text-brand-700 hover:underline">
+                    <a
+                      href="/privacidad"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand-700 hover:underline"
+                    >
                       Política de Privacidad
                     </a>
                   </span>

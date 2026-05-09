@@ -108,9 +108,9 @@ export default function Landing() {
             <span aria-hidden="true">·</span>
             <a href="#" className="hover:text-brand-700 transition">Términos</a>
             <span aria-hidden="true">·</span>
-            <a href="#" className="hover:text-brand-700 transition">Privacidad</a>
+            <Link href="/privacidad" className="hover:text-brand-700 transition">Privacidad</Link>
             <span aria-hidden="true">·</span>
-            <a href="#" className="hover:text-brand-700 transition">Contacto</a>
+            <a href="mailto:hola@renttove.com" className="hover:text-brand-700 transition">Contacto</a>
           </div>
         </footer>
 
