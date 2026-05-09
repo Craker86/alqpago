@@ -1,8 +1,15 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 5 mayo 2026 (KYC live capture + Fase 4 privacidad)
+**Última actualización:** 5 mayo 2026 (KYC + privacidad + wait list)
 
 ## ✅ Completado en sesión 5 may
+
+### Wait list para piloto en Caracas
+- [x] **`supabase-wait-list.sql`**: tabla `wait_list` con email único, nombre, rol (inquilino/propietario/ambos), ciudad, origen, contactado bool, fecha de contacto, notas admin. RLS: INSERT público (anon+autenticado), SELECT/UPDATE/DELETE solo `es_admin`
+- [x] **`WaitListForm.js`** client component con validación de email, selección de rol con 3 botones-pill, manejo de duplicados (UNIQUE) con mensaje amistoso, estado de éxito celebratorio con CTA a `/modos`
+- [x] **Landing `/` reposicionado**: hero ahora invita a sumarse al piloto en lugar de "Buscar inmueble" / "Publicar". Botones: `Sumate al piloto` (primary, ancla a `#piloto`) + `Ver cómo funciona` (a `/modos`). Sección con form embebido entre hero y features
+- [x] **Panel `/admin/wait-list`** con tabs (por contactar / contactados / todos) con counters, lista con checkbox para marcar contactado, botón mailto pre-rellenado, exportación CSV (BOM UTF-8), borrado con confirmación
+- [x] **AdminCard en `/perfil`** ahora con 2 entradas: "Verificaciones por revisar" + "Wait list del piloto", agrupadas en un mismo bloque oscuro
 
 ### KYC Fase 4 — Privacidad y retención
 - [x] **Página pública `/privacidad`** con texto legal completo (LOPPDP VE + buenas prácticas RGPD): qué datos recolectamos, base legal, almacenamiento cifrado, retención por tipo, terceros (Supabase/Vercel/Resend/Cloudflare), derechos del titular, cookies, contacto `privacidad@renttove.com`
@@ -100,6 +107,7 @@
 - [x] ~~Correr `supabase-notif-prefs.sql`~~ (corrido)
 - [x] ~~Correr `supabase-verificaciones.sql`~~ (corrido)
 - [x] ~~Correr `supabase-verificaciones-trigger.sql`~~ (corrido)
+- [ ] **Correr `supabase-wait-list.sql`** (tabla wait_list + RLS de insert público + select/update/delete admin)
 
 ### Acciones tuyas (Vercel env vars)
 - [ ] **Agregar `CRON_SECRET`** en Vercel → Settings → Environment Variables. Generá un string random largo (~32 chars). El cron de retención lo usa para autenticar el llamado
@@ -134,8 +142,7 @@
 5. `supabase-notif-prefs.sql` — preferencias (ya corrido)
 6. `supabase-verificaciones.sql` — KYC tabla + bucket + RLS + admin (ya corrido)
 7. `supabase-verificaciones-trigger.sql` — trigger notif inbox al cambiar estado (ya corrido)
-
-**Todos los SQL están al día. No hay nada pendiente de correr en Supabase.**
+8. `supabase-wait-list.sql` — tabla wait_list para piloto (**pendiente**)
 
 ## 📂 Archivos clave en esta sesión
 

@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Clock,
   ShieldAlert,
+  Rocket,
 } from "lucide-react";
 import { calcularScore, toneDeModo } from "../lib/scoring";
 
@@ -170,21 +171,32 @@ export default function Perfil() {
 
 function AdminCard() {
   return (
-    <Link
-      href="/admin/verificaciones"
-      className="block bg-fg text-fg-inverse rounded-card p-4 mt-6 shadow-elevated hover:bg-fg/90 transition"
-    >
-      <div className="flex items-center gap-3">
+    <div className="bg-fg text-fg-inverse rounded-card mt-6 shadow-elevated overflow-hidden">
+      <div className="px-4 pt-4 pb-2">
+        <p className="text-[10px] uppercase tracking-wide opacity-70 font-semibold">Modo admin</p>
+      </div>
+      <Link
+        href="/admin/verificaciones"
+        className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
+      >
         <div className="w-10 h-10 bg-white/10 rounded-pill flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
           <ShieldCheck size={18} strokeWidth={2.25} />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] uppercase tracking-wide opacity-70 font-semibold">Modo admin</p>
-          <p className="text-sm font-bold mt-0.5">Verificaciones por revisar</p>
-        </div>
+        <p className="flex-1 text-sm font-bold">Verificaciones por revisar</p>
         <ArrowRight size={16} className="opacity-80 flex-shrink-0" strokeWidth={2.25} />
-      </div>
-    </Link>
+      </Link>
+      <div className="border-t border-white/10" />
+      <Link
+        href="/admin/wait-list"
+        className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
+      >
+        <div className="w-10 h-10 bg-white/10 rounded-pill flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+          <Rocket size={18} strokeWidth={2.25} />
+        </div>
+        <p className="flex-1 text-sm font-bold">Wait list del piloto</p>
+        <ArrowRight size={16} className="opacity-80 flex-shrink-0" strokeWidth={2.25} />
+      </Link>
+    </div>
   );
 }
 

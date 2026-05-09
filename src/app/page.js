@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Shield, Smartphone, Zap } from "lucide-react";
+import WaitListForm from "./WaitListForm";
 
 export default function Landing() {
   return (
@@ -34,19 +35,24 @@ export default function Landing() {
             Publica, alquila y paga. 100% digital, 100% seguro.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
-            <Link
-              href="/propiedades"
+            <a
+              href="#piloto"
               className="bg-brand-800 text-fg-inverse rounded-pill py-3.5 px-6 font-semibold text-sm shadow-card hover:bg-brand-900 transition text-center"
             >
-              Buscar inmueble
-            </Link>
+              Sumate al piloto
+            </a>
             <Link
-              href="/login?rol=propietario"
+              href="/modos"
               className="border border-brand-800 text-brand-800 rounded-pill py-3.5 px-6 font-semibold text-sm hover:bg-brand-50 transition text-center"
             >
-              Publicar mi inmueble
+              Ver cómo funciona
             </Link>
           </div>
+        </section>
+
+        {/* Wait list */}
+        <section className="py-6 sm:py-10">
+          <WaitListForm />
         </section>
 
         {/* ¿Por qué Rentto? */}
