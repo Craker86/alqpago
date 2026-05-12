@@ -125,9 +125,6 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-fg">
             Hola{nombre ? `, ${nombre.split(" ")[0]}` : ""}
           </h1>
-          <p className="text-sm text-fg-muted mt-1">
-            {estado.subtitulo}
-          </p>
         </header>
 
         <VerificacionCard verif={verificacion} />
@@ -147,14 +144,11 @@ export default function Home() {
           className="flex items-center justify-center gap-2 bg-surface border border-dashed border-brand-300 rounded-card p-4 mt-4 hover:bg-brand-50 transition"
         >
           <Plus size={16} className="text-brand-700" strokeWidth={2.5} />
-          <div className="text-left">
-            <p className="text-sm font-semibold text-brand-700">Vincular nueva propiedad</p>
-            <p className="text-xs text-fg-muted mt-0.5">Ingresa el código de tu propietario</p>
-          </div>
+          <p className="text-sm font-semibold text-brand-700">Vincular propiedad</p>
         </Link>
 
         <div className="flex justify-between items-center mt-6 mb-3">
-          <h2 className="text-sm font-semibold text-fg">Pagar con</h2>
+          <h2 className="text-sm font-semibold text-fg">Pagar</h2>
           <Link href="/pagar" className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800 transition">
             Ver todos <ArrowRight size={12} strokeWidth={2.5} />
           </Link>
@@ -180,7 +174,7 @@ export default function Home() {
         </div>
 
         <div className="flex justify-between items-center mt-6 mb-3">
-          <h2 className="text-sm font-semibold text-fg">Historial reciente</h2>
+          <h2 className="text-sm font-semibold text-fg">Historial</h2>
           <Link href="/recibos" className="text-xs font-semibold text-brand-700 hover:text-brand-800 transition">
             Ver todo
           </Link>
@@ -251,39 +245,39 @@ function ProximaAccion({ estado }) {
     confirmado: {
       Icon: CheckCircle2,
       tone: "success",
-      titulo: "Todo al día este mes",
-      cuerpo: "Tu pago fue confirmado. +7 pts en tu score Rentto.",
+      titulo: "Al día este mes",
+      cuerpo: "+7 pts en tu score.",
       cta: null,
     },
     pendiente: {
       Icon: Clock,
       tone: "warning",
       titulo: "Esperando confirmación",
-      cuerpo: "Tu pago fue enviado. El propietario lo revisará pronto.",
+      cuerpo: "El propietario revisará el pago pronto.",
       cta: { label: "Ver recibo", href: "/recibos" },
     },
     rechazado: {
       Icon: XCircle,
       tone: "danger",
-      titulo: "Tu pago fue rechazado",
-      cuerpo: "Verifica el comprobante y vuelve a intentar.",
-      cta: { label: "Volver a pagar", href: "/pagar" },
+      titulo: "Pago rechazado",
+      cuerpo: "Revisá el comprobante y reenviá.",
+      cta: { label: "Pagar", href: "/pagar" },
     },
     vencido: {
       Icon: AlertCircle,
       tone: "danger",
-      titulo: `Vencido hace ${Math.abs(estado.diasAlCorte)} ${Math.abs(estado.diasAlCorte) === 1 ? "día" : "días"}`,
-      cuerpo: "Paga lo antes posible para mantener tu score.",
-      cta: { label: "Pagar ahora", href: "/pagar" },
+      titulo: `Vencido hace ${Math.abs(estado.diasAlCorte)}d`,
+      cuerpo: "Pagá ya para no perder score.",
+      cta: { label: "Pagar", href: "/pagar" },
     },
     sin_pagar_aun: {
       Icon: Clock,
       tone: "brand",
       titulo: estado.diasAlCorte === 0
-        ? "Tu alquiler vence hoy"
-        : `Faltan ${estado.diasAlCorte} ${estado.diasAlCorte === 1 ? "día" : "días"} para vencer`,
-      cuerpo: "Adelantarte protege tu score y evita penalizaciones.",
-      cta: { label: "Pagar ahora", href: "/pagar" },
+        ? "Vence hoy"
+        : `Faltan ${estado.diasAlCorte}d`,
+      cuerpo: "Adelantarte protege tu score.",
+      cta: { label: "Pagar", href: "/pagar" },
     },
   }[estado.tipo];
 
@@ -434,9 +428,7 @@ function VerificacionCard({ verif }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold">Verifica tu identidad</p>
-        <p className="text-xs opacity-85 mt-0.5 leading-relaxed">
-          Sube tu cédula y selfie para subir tu score y acceder a modos avanzados.
-        </p>
+        <p className="text-xs opacity-85 mt-0.5">Suma 20 pts y desbloquea modos altos.</p>
       </div>
       <ArrowRight size={14} className="opacity-90 self-center flex-shrink-0" strokeWidth={2.25} />
     </Link>
@@ -449,17 +441,15 @@ function EmptyVinculo() {
       <div className="w-12 h-12 bg-brand-50 rounded-pill flex items-center justify-center mx-auto">
         <Plus size={22} className="text-brand-700" strokeWidth={2.25} />
       </div>
-      <h2 className="text-sm font-semibold text-fg mt-3">
-        Aún no estás vinculado a una propiedad
-      </h2>
-      <p className="text-xs text-fg-muted mt-1 max-w-[280px] mx-auto leading-relaxed">
-        Pídele a tu propietario el código de 6 dígitos para recibir pagos, contrato y score.
+      <h2 className="text-sm font-semibold text-fg mt-3">Sin propiedad</h2>
+      <p className="text-xs text-fg-muted mt-1 max-w-[260px] mx-auto">
+        Pedí el código a tu propietario para vincularte.
       </p>
       <Link
         href="/vincular"
         className="inline-flex items-center justify-center gap-2 mt-4 px-5 py-2.5 bg-brand-800 text-fg-inverse rounded-pill text-xs font-semibold shadow-card hover:bg-brand-900 transition"
       >
-        Vincular ahora <ArrowRight size={12} strokeWidth={2.5} />
+        Vincular <ArrowRight size={12} strokeWidth={2.5} />
       </Link>
     </section>
   );

@@ -179,8 +179,8 @@ export default function Cobros() {
           </div>
           <p className="text-sm text-fg-muted mt-1">
             {pendientes.length === 0
-              ? "Todo al día — no hay pagos por confirmar."
-              : `${pendientes.length} ${pendientes.length === 1 ? "pago pendiente de revisar" : "pagos pendientes de revisar"}`}
+              ? "Al día. Sin pendientes."
+              : `${pendientes.length} ${pendientes.length === 1 ? "pendiente" : "pendientes"}`}
           </p>
         </header>
 
@@ -203,7 +203,7 @@ export default function Cobros() {
         {recientes.length > 0 && pendientes.length > 0 && (
           <section className="mt-8">
             <h2 className="text-sm font-semibold text-fg mb-3">
-              Procesados hoy
+              Procesados
             </h2>
             <div className="flex flex-col gap-2">
               {recientes.map((pago) => (
@@ -340,18 +340,16 @@ function EmptyState({ recientes }) {
         <div className="w-14 h-14 bg-success-100 rounded-pill flex items-center justify-center mx-auto">
           <Inbox size={24} className="text-success-600" strokeWidth={1.75} />
         </div>
-        <p className="text-sm font-semibold text-fg mt-4">
-          ¡Estás al día!
-        </p>
-        <p className="text-xs text-fg-muted mt-1 max-w-[260px] mx-auto leading-relaxed">
-          No hay pagos por revisar. Cuando un inquilino registre un pago, aparecerá acá.
+        <p className="text-sm font-semibold text-fg mt-4">Al día</p>
+        <p className="text-xs text-fg-muted mt-1 max-w-[240px] mx-auto">
+          Los nuevos pagos van a aparecer acá.
         </p>
       </div>
 
       {recientes.length > 0 && (
         <section className="mt-6">
           <h2 className="text-sm font-semibold text-fg mb-3">
-            Procesados hoy
+            Procesados
           </h2>
           <div className="flex flex-col gap-2">
             {recientes.map((pago) => (

@@ -72,7 +72,7 @@ export default function Login() {
           nombre,
         });
       }
-      setErrorMsg("Cuenta creada. Revisa tu email para confirmar.");
+      setErrorMsg("Cuenta creada. Revisá tu correo.");
       setLoading(false);
       return;
     }
@@ -148,20 +148,20 @@ export default function Login() {
                 <>
                   <div>
                     <label className="text-xs font-medium text-gray-900 block mb-2">
-                      ¿Qué vienes a hacer en Rentto?
+                      ¿Cómo te sumás?
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <RoleCard
                         Icon={Home}
                         title="Inquilino"
-                        desc="Busco un lugar donde vivir"
+                        desc="Busco dónde vivir"
                         active={rol === "inquilino"}
                         onClick={() => setRol("inquilino")}
                       />
                       <RoleCard
                         Icon={Key}
                         title="Propietario"
-                        desc="Tengo un inmueble para alquilar"
+                        desc="Tengo inmueble para alquilar"
                         active={rol === "propietario"}
                         onClick={() => setRol("propietario")}
                       />
@@ -217,7 +217,7 @@ export default function Login() {
                 />
                 {activeTab === "signup" ? (
                   <p className="text-xs text-gray-500 mt-1.5">
-                    Mínimo 8 caracteres, con mayúscula y número
+                    8+ chars, mayúscula y número
                   </p>
                 ) : (
                   <div className="text-right mt-1.5">

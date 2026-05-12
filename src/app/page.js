@@ -29,10 +29,10 @@ export default function Landing() {
         {/* Hero */}
         <section className="text-center py-10 sm:py-16">
           <h1 className="text-3xl sm:text-4xl font-bold text-fg leading-tight">
-            La forma inteligente de alquilar en Venezuela
+            Alquilar en Venezuela, sin fricción
           </h1>
-          <p className="text-base text-fg-muted mt-4 leading-relaxed">
-            Publica, alquila y paga. 100% digital, 100% seguro.
+          <p className="text-base text-fg-muted mt-4">
+            Contrato digital · Pago garantizado · Score que abre puertas
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
             <a
@@ -62,17 +62,17 @@ export default function Landing() {
             <Feature
               Icon={Shield}
               title="Pago garantizado"
-              description="Si el inquilino no paga, nosotros cubrimos."
+              description="Si el inquilino no paga, cubrimos."
             />
             <Feature
               Icon={Smartphone}
-              title="Contrato 100% digital"
-              description="Firma desde tu teléfono con validez legal."
+              title="Contrato digital"
+              description="Firmá desde tu teléfono."
             />
             <Feature
               Icon={Zap}
-              title="Alquila en 24 horas"
-              description="Sin aval, sin fiador, sin trámites."
+              title="Alquilá en 24h"
+              description="Sin aval ni fiador."
             />
           </div>
         </section>
@@ -81,9 +81,9 @@ export default function Landing() {
         <section className="py-10">
           <h2 className="text-xl font-bold text-fg text-center mb-6">Cómo funciona</h2>
           <div className="space-y-4">
-            <Step n={1}>Busca tu próximo hogar en nuestro marketplace.</Step>
-            <Step n={2}>Solicita y firma tu contrato digital.</Step>
-            <Step n={3}>Paga mes a mes desde la app.</Step>
+            <Step n={1}>Buscás tu próximo hogar.</Step>
+            <Step n={2}>Firmás contrato online.</Step>
+            <Step n={3}>Pagás mes a mes desde la app.</Step>
           </div>
         </section>
 
@@ -91,14 +91,14 @@ export default function Landing() {
         <section className="py-10">
           <div className="bg-brand-50 border border-brand-200 rounded-card p-6 text-center">
             <h2 className="text-xl font-bold text-fg">Tres niveles de protección</h2>
-            <p className="text-sm text-fg-muted mt-2 leading-relaxed max-w-[320px] mx-auto">
-              Desde plataforma básica hasta garante total con cobertura de hasta 3 meses de impago.
+            <p className="text-sm text-fg-muted mt-2 max-w-[320px] mx-auto">
+              Desde básico hasta cobertura de 3 meses ante impago.
             </p>
             <Link
               href="/modos"
               className="inline-flex items-center justify-center gap-2 mt-4 px-5 py-2.5 bg-brand-800 text-fg-inverse rounded-pill text-sm font-semibold shadow-card hover:bg-brand-900 transition"
             >
-              Conoce los 3 modos →
+              Ver modos →
             </Link>
           </div>
         </section>
