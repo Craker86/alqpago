@@ -66,18 +66,17 @@ export default function WaitListForm() {
           <Sparkles size={24} strokeWidth={2.25} />
         </div>
         <h2 className="text-xl font-bold text-success-600 mt-4">
-          ¡Estás en la lista!
+          Estás dentro
         </h2>
-        <p className="text-sm text-fg-muted mt-2 max-w-[360px] mx-auto leading-relaxed">
-          {nombre ? `${nombre.split(" ")[0]}, ` : ""}te escribimos en cuanto
-          te toque turno. Mientras tanto, mirá los modos para entender cómo
-          funciona Rentto.
+        <p className="text-sm text-fg-muted mt-2 max-w-[340px] mx-auto">
+          {nombre ? `${nombre.split(" ")[0]}, te ` : "Te "}
+          escribimos cuando te toque turno.
         </p>
         <Link
           href="/modos"
           className="inline-flex items-center justify-center gap-1.5 mt-5 px-5 py-2.5 bg-success-600 text-white rounded-pill text-sm font-semibold shadow-card hover:bg-success-600/90 transition"
         >
-          Conocer los 3 modos →
+          Ver modos →
         </Link>
       </section>
     );
@@ -96,11 +95,9 @@ export default function WaitListForm() {
       <h2 className="text-xl font-bold text-fg text-center">
         Sumate a los primeros 50
       </h2>
-      <p className="text-sm text-fg-muted text-center mt-1.5 max-w-[400px] mx-auto leading-relaxed">
-        Estamos arrancando con un grupo cerrado de inquilinos y propietarios
-        en Caracas.{" "}
-        <strong className="text-fg">3 meses sin comisión</strong> para los que
-        entren ahora.
+      <p className="text-sm text-fg-muted text-center mt-1.5 max-w-[380px] mx-auto">
+        Caracas, grupo cerrado.{" "}
+        <strong className="text-fg">3 meses sin comisión</strong> para los que entren ahora.
       </p>
 
       <form onSubmit={enviar} className="mt-6 space-y-3 max-w-[400px] mx-auto">

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
 import { ArrowLeft, Home, KeyRound, Shield, ShieldCheck, ShieldPlus, CheckCircle2, AlertTriangle } from "lucide-react";
@@ -9,8 +9,23 @@ import { calcularScore, toneDeModo as toneDeScore } from "../lib/scoring";
 import { getModo, toneDeModo } from "../lib/modos";
 
 export default function Vincular() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-surface-muted flex items-center justify-center">
+        <p className="text-fg-subtle text-sm">Cargando…</p>
+      </div>
+    }>
+      <VincularInner />
+    </Suspense>
+  );
+}
+
+function VincularInner() {
   const router = useRouter();
-  const [codigo, setCodigo] = useState("");
+  const searchParams = useSearchParams();
+  const codigoQuery = (searchParams?.get("codigo") || "").toUpperCase();
+
+  const [codigo, setCodigo] = useState(codigoQuery);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [propiedad, setPropiedad] = useState(null);
@@ -49,6 +64,16 @@ export default function Vincular() {
           verificacion: verif,
         })
       );
+
+      // Si llegó con ?codigo=XYZ desde una propiedad, busca automáticamente
+      if (codigoQuery && codigoQuery.length >= 6) {
+        const { data: prop } = await supabase
+          .from("propiedades")
+          .select("*")
+          .eq("codigo_invitacion", codigoQuery)
+          .maybeSingle();
+        if (prop) setPropiedad(prop);
+      }
     }
     cargarScoring();
   }, []);
@@ -140,8 +165,8 @@ export default function Vincular() {
           <ArrowLeft size={14} strokeWidth={2.25} /> Volver
         </Link>
 
-        <h1 className="text-2xl font-bold text-fg">Vincular propiedad</h1>
-        <p className="text-sm text-fg-muted mt-1">Ingresa el código que te dio tu propietario</p>
+        <h1 className="text-2xl font-bold text-fg">Vincular</h1>
+        <p className="text-sm text-fg-muted mt-1">Ingresá el código de tu propietario</p>
 
         <div className="bg-surface border border-stroke rounded-card shadow-card p-5 mt-4">
           {!propiedad ? (
@@ -152,7 +177,7 @@ export default function Vincular() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-fg-muted block mb-1.5">Código de invitación</label>
+                <label className="text-xs font-semibold text-fg-muted block mb-1.5">Código</label>
                 <input
                   type="text"
                   value={codigo}
@@ -174,7 +199,7 @@ export default function Vincular() {
                     : "bg-brand-800 hover:bg-brand-900 shadow-card"
                 }`}
               >
-                {cargando ? "Buscando…" : "Buscar propiedad"}
+                {cargando ? "Buscando…" : "Buscar"}
               </button>
             </div>
           ) : (
@@ -230,10 +255,10 @@ export default function Vincular() {
                 {cargando
                   ? "Vinculando…"
                   : calificas
-                    ? "Confirmar vinculación"
+                    ? "Vincular"
                     : !scoreOk
                       ? `Te faltan ${requerido - myScore} pts`
-                      : "Verifica tu identidad primero"}
+                      : "Verificá tu identidad primero"}
               </button>
               <button
                 onClick={() => { setPropiedad(null); setCodigo(""); setMensaje(""); }}

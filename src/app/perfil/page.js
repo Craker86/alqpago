@@ -34,10 +34,10 @@ export default function Perfil() {
 
   const opciones = [
     { Icon: User, nombre: "Datos personales", ruta: "/datos-personales" },
-    { Icon: ShieldCheck, nombre: "Verificar identidad", ruta: "/perfil/verificar", badge: "verificacion" },
+    { Icon: ShieldCheck, nombre: "Verificación", ruta: "/perfil/verificar", badge: "verificacion" },
     { Icon: FileText, nombre: "Contratos", ruta: "/contrato" },
     { Icon: CreditCard, nombre: "Métodos de pago", ruta: "/metodos-pago" },
-    { Icon: Receipt, nombre: "Recibos y facturas", ruta: "/recibos" },
+    { Icon: Receipt, nombre: "Recibos", ruta: "/recibos" },
     { Icon: Bell, nombre: "Notificaciones", ruta: "/notificaciones" },
     { Icon: Lock, nombre: "Seguridad", ruta: "/seguridad" },
     { Icon: Settings, nombre: "Configuración", ruta: "/configuracion" },
@@ -126,7 +126,7 @@ export default function Perfil() {
             <span className="text-xs font-semibold text-brand-700 truncate ml-3">{usuario.email}</span>
           </div>
           <div className="flex justify-between mt-3">
-            <span className="text-xs text-fg-muted">Miembro desde</span>
+            <span className="text-xs text-fg-muted">Desde</span>
             <span className="text-xs font-semibold text-fg">{usuario.creado}</span>
           </div>
         </div>

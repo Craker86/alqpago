@@ -1,8 +1,19 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 5 mayo 2026 (KYC + privacidad + wait list)
+**Última actualización:** 11 mayo 2026 (marketplace Airbnb-style + copy minimalista)
 
-## ✅ Completado en sesión 5 may
+## ✅ Completado en sesión 11 may
+
+### Marketplace Airbnb-style
+- [x] **`PhotoCarousel.js`** reutilizable: scroll-snap horizontal + dot indicators + lazy loading desde la segunda foto + onClick opcional
+- [x] **`/propiedades` rediseñado**: cards con foto protagonista (4:3 aspect), heart flotante (favoritos persistidos en `localStorage` con key `rentto_favoritos`), modo chip superpuesto, texto minimalista (nombre + zona + precio bold), tap entera abre detalle. Filtros como pills oscuras. Search bar como pill
+- [x] **`/propiedades/[id]` nuevo**: hero gallery cuadrada con carousel + back/share/heart flotantes, título + dirección, precio grande, modo banner, score check con CTA dinámico, meta (corte/ajuste), descripción, requisitos en card warning, **host card con verificación KYC + miembro desde**, sticky bottom action bar con precio + WhatsApp + Vincular (deshabilitado si no calificás)
+- [x] **`/vincular?codigo=XYZ`** acepta query param: si llegás desde una propiedad y tenés código válido, autocompletea y pre-busca la propiedad (`Suspense` wrap para Next.js 16)
+- [x] **Compartir nativo**: en detalle, `navigator.share()` si está disponible, fallback a `clipboard.writeText()` con alert
+
+### Copy minimalista (toda la app)
+- [x] **Principios aplicados**: no repetir lo obvio · headers cortos · CTAs en verbo · eliminar helper text redundante · mensajes de éxito breves
+- [x] **Páginas tocadas**: landing (`/`), dashboard, perfil, cobros, vincular, login (signup), inquilinos, perfil/verificar, WaitListForm. Ejemplos: "Aún no estás vinculado a una propiedad" → "Sin propiedad"; "Confirmar vinculación" → "Vincular"; "Enviar para verificación" → "Enviar"; "Tu identidad fue verificada" → "Verificada"; "Historial reciente" → "Historial"
 
 ### Wait list para piloto en Caracas
 - [x] **`supabase-wait-list.sql`**: tabla `wait_list` con email único, nombre, rol (inquilino/propietario/ambos), ciudad, origen, contactado bool, fecha de contacto, notas admin. RLS: INSERT público (anon+autenticado), SELECT/UPDATE/DELETE solo `es_admin`

@@ -127,7 +127,7 @@ export default function Inquilinos() {
         <header className="pt-6 pb-4">
           <h1 className="text-2xl font-bold text-fg">Inquilinos</h1>
           <p className="text-sm text-fg-muted mt-1">
-            {filas.length} {filas.length === 1 ? "vinculación" : "vinculaciones"} · {activos} {activos === 1 ? "activa" : "activas"}
+            {filas.length} en total · {activos} {activos === 1 ? "activo" : "activos"}
           </p>
         </header>
 
@@ -136,11 +136,9 @@ export default function Inquilinos() {
             <div className="w-14 h-14 bg-brand-50 rounded-pill flex items-center justify-center mx-auto">
               <UserX size={24} className="text-brand-300" strokeWidth={1.75} />
             </div>
-            <p className="text-sm font-semibold text-fg mt-4">
-              Aún no tienes inquilinos vinculados
-            </p>
-            <p className="text-xs text-fg-muted mt-1 max-w-[260px] mx-auto leading-relaxed">
-              Comparte el código de invitación de tu propiedad para que un inquilino se vincule.
+            <p className="text-sm font-semibold text-fg mt-4">Sin inquilinos</p>
+            <p className="text-xs text-fg-muted mt-1 max-w-[240px] mx-auto">
+              Compartí el código de tu propiedad para vincular.
             </p>
           </div>
         ) : (
@@ -155,7 +153,7 @@ export default function Inquilinos() {
                 type="text"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar por nombre, propiedad o teléfono…"
+                placeholder="Nombre, propiedad o teléfono…"
                 className="w-full rounded-xl border border-stroke bg-surface pl-10 pr-4 py-3 text-sm placeholder:text-fg-subtle focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200 transition"
               />
             </div>

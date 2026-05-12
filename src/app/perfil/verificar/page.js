@@ -230,10 +230,10 @@ export default function Verificar() {
         <header className="mt-2">
           <div className="flex items-center gap-2">
             <ShieldCheck size={22} className="text-brand-700" strokeWidth={2.25} />
-            <h1 className="text-2xl font-bold text-fg">Verifica tu identidad</h1>
+            <h1 className="text-2xl font-bold text-fg">Verificación</h1>
           </div>
           <p className="text-sm text-fg-muted mt-1">
-            Documentos requeridos para que propietarios e inquilinos confíen en ti.
+            Pruebá quién sos. Suma 20 pts y desbloquea modos altos.
           </p>
         </header>
 
@@ -296,17 +296,16 @@ export default function Verificar() {
                 <Loader2 size={14} className="animate-spin" /> Enviando…
               </>
             ) : verif ? (
-              "Reenviar para verificación"
+              "Reenviar"
             ) : (
-              "Enviar para verificación"
+              "Enviar"
             )}
           </button>
         )}
 
         {!editable && (
-          <p className="text-xs text-fg-muted text-center mt-5 leading-relaxed">
-            Tus documentos están en revisión. Te avisaremos por correo y por la
-            campanita en cuanto haya un cambio de estado.
+          <p className="text-xs text-fg-muted text-center mt-5">
+            En revisión. Te avisamos por correo y en la campanita.
           </p>
         )}
       </div>
@@ -326,25 +325,25 @@ function EstadoBanner({ verif }) {
       Icon: Clock,
       tone: "warning",
       titulo: "En revisión",
-      cuerpo: "Tu solicitud está siendo revisada por el equipo Rentto. Suele tomar entre 1 y 24 horas.",
+      cuerpo: "Tarda entre 1 y 24 h.",
     },
     aprobada: {
       Icon: CheckCircle2,
       tone: "success",
-      titulo: "Identidad verificada",
-      cuerpo: "Tu identidad fue confirmada. Ya puedes vincularte a propiedades en cualquier modo.",
+      titulo: "Verificada",
+      cuerpo: "Ya podés vincularte a cualquier modo.",
     },
     rechazada: {
       Icon: XCircle,
       tone: "danger",
-      titulo: "Verificación rechazada",
-      cuerpo: verif.nota_revisor || "Por favor revisa tus documentos y vuelve a enviarlos.",
+      titulo: "Rechazada",
+      cuerpo: verif.nota_revisor || "Revisá los documentos y reenviá.",
     },
     requiere_reenvio: {
       Icon: AlertTriangle,
       tone: "warning",
-      titulo: "Necesitamos que reenvíes algo",
-      cuerpo: verif.nota_revisor || "Algunos documentos no se ven con claridad. Por favor reenvíalos.",
+      titulo: "Reenvíanos algo",
+      cuerpo: verif.nota_revisor || "Algunos docs no se ven claros.",
     },
   }[verif.estado];
 
