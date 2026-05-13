@@ -43,6 +43,35 @@ export function formatTasa(num) {
 }
 
 /**
+ * Fecha completa en español con día de la semana y año. Capitaliza la
+ * primera letra (es-VE devuelve "lunes" en minúscula).
+ *   fechaCompleta()              → "Lunes, 11 de mayo de 2026"
+ *   fechaCompleta(new Date(...)) → "Domingo, 14 de mayo de 2026"
+ */
+export function fechaCompleta(date = new Date()) {
+  const d = new Date(date);
+  if (!Number.isFinite(d.getTime())) return "";
+  const str = d.toLocaleDateString("es-VE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Fecha corta es-VE.
+ *   fechaCorta()              → "11 may"
+ *   fechaCorta(new Date(...)) → "14 may"
+ */
+export function fechaCorta(date = new Date()) {
+  const d = new Date(date);
+  if (!Number.isFinite(d.getTime())) return "";
+  return d.toLocaleDateString("es-VE", { day: "numeric", month: "short" });
+}
+
+/**
  * Tiempo relativo en español, corto.
  *   tiempoRelativo(hace 30s) → "ahora"
  *   tiempoRelativo(hace 5m)  → "hace 5m"

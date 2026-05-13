@@ -23,6 +23,7 @@ import {
   Plus,
 } from "lucide-react";
 import { MODOS_LISTA, getModo, toneDeModo as toneDeModoProp } from "../lib/modos";
+import { fechaCompleta } from "../lib/format";
 
 export default function Propietario() {
   const router = useRouter();
@@ -187,9 +188,9 @@ export default function Propietario() {
     <div className="min-h-screen bg-surface-muted pb-24">
       <div className="max-w-[480px] mx-auto px-5">
         <header className="pt-6 pb-4">
-          <h1 className="text-2xl font-bold text-fg">Panel del propietario</h1>
+          <h1 className="text-2xl font-bold text-fg">Panel</h1>
           <p className="text-sm text-fg-muted mt-1">
-            {propiedadesOcupadas.length} de {propiedades.length} {propiedades.length === 1 ? "propiedad ocupada" : "propiedades ocupadas"}
+            {fechaCompleta()} · {propiedadesOcupadas.length} de {propiedades.length} {propiedades.length === 1 ? "ocupada" : "ocupadas"}
           </p>
         </header>
 
