@@ -20,7 +20,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { calcularScore } from "../lib/scoring";
-import { formatBs, formatUsd, formatTasa, tiempoRelativo } from "../lib/format";
+import { formatBs, formatUsd, formatTasa, tiempoRelativo, fechaCompleta } from "../lib/format";
 
 export default function Home() {
   const [pagos, setPagos] = useState([]);
@@ -130,6 +130,7 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-fg">
             Hola{nombre ? `, ${nombre.split(" ")[0]}` : ""}
           </h1>
+          <p className="text-sm text-fg-muted mt-1">{fechaCompleta()}</p>
         </header>
 
         <VerificacionCard verif={verificacion} />
