@@ -9,8 +9,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Plus Jakarta Sans — moderna, geométrica, premium. Variable cargada en layout.js */
-  --font-sans: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
+  /* Onest — moderna, geométrica, distintiva. Variable cargada en layout.js */
+  --font-sans: var(--font-sans), "Onest", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Monaco, monospace;
 
   /* Tracking modernos (estilo Airbnb/Stripe): titulares apretados */
@@ -79,11 +79,10 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--font-sans), "Onest", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "ss01", "cv01", "cv11";
 }
 
 /* Titulares grandes con tracking moderno (estilo SaaS premium) */
