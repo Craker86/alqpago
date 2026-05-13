@@ -20,12 +20,14 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { calcularScore } from "../lib/scoring";
+import { formatBs, formatUsd, formatTasa, tiempoRelativo } from "../lib/format";
 
 export default function Home() {
   const [pagos, setPagos] = useState([]);
   const [propiedad, setPropiedad] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [tasa, setTasa] = useState(0);
+  const [tasaActualizada, setTasaActualizada] = useState(null);
   const [nombre, setNombre] = useState("");
   const [scoring, setScoring] = useState(null);
   const [verificacion, setVerificacion] = useState(null);
@@ -73,11 +75,14 @@ export default function Home() {
 
       const { data: tasaData } = await supabase
         .from("tasa_bcv")
-        .select("tasa")
+        .select("tasa, created_at")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (tasaData) setTasa(tasaData.tasa);
+      if (tasaData) {
+        setTasa(tasaData.tasa);
+        setTasaActualizada(tasaData.created_at);
+      }
 
       const { data: verifData } = await supabase
         .from("verificaciones")
@@ -130,7 +135,12 @@ export default function Home() {
         <VerificacionCard verif={verificacion} />
 
         {propiedad ? (
-          <HeroDelMes propiedad={propiedad} tasa={tasa} estado={estado} />
+          <HeroDelMes
+            propiedad={propiedad}
+            tasa={tasa}
+            tasaActualizada={tasaActualizada}
+            estado={estado}
+          />
         ) : (
           <EmptyVinculo />
         )}
@@ -200,16 +210,26 @@ export default function Home() {
 // Componentes
 // ============================================================================
 
-function HeroDelMes({ propiedad, tasa, estado }) {
+function HeroDelMes({ propiedad, tasa, tasaActualizada, estado }) {
+  const equivalenteBs = tasa > 0 ? propiedad.monto_mensual * tasa : null;
+
   return (
     <section className="bg-brand-800 text-fg-inverse rounded-card p-5 shadow-elevated">
       <p className="text-xs opacity-80 uppercase tracking-wide">
-        Monto del mes · {estado.mesActualLabel}
+        {estado.mesActualLabel}
       </p>
-      <p className="text-4xl font-bold mt-1">${propiedad.monto_mensual}</p>
+      <p className="text-4xl font-bold mt-1 tracking-tight">
+        {formatUsd(propiedad.monto_mensual)}
+      </p>
+      {equivalenteBs != null && (
+        <p className="text-sm opacity-85 mt-1">
+          {formatBs(equivalenteBs)}
+        </p>
+      )}
       {tasa > 0 && (
-        <p className="text-xs opacity-70 mt-1">
-          Bs. {(propiedad.monto_mensual * tasa).toFixed(2)} al cambio BCV
+        <p className="text-[10px] opacity-60 mt-0.5">
+          1 USD = Bs. {formatTasa(tasa)}
+          {tasaActualizada && ` · BCV ${tiempoRelativo(tasaActualizada)}`}
         </p>
       )}
       <div className="flex justify-between items-end mt-4 gap-2">
