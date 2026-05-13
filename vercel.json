@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/cron/tasa-bcv",
-      "schedule": "0 */4 * * *"
+      "schedule": "0 12 * * *"
     }
   ]
 }
