@@ -3,12 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 // ============================================================================
 // CRON: actualización de la tasa BCV (USD/Bs)
 // ============================================================================
-// Vercel Cron lo invoca cada 4 horas con header Authorization: Bearer ${CRON_SECRET}.
+// Vercel Cron lo invoca 1 vez/día (12:00 UTC) con header Authorization: Bearer ${CRON_SECRET}.
+// El plan Hobby de Vercel limita crons a 1 ejecución diaria — suficiente porque
+// el BCV solo publica una tasa por día hábil.
 //
 // Estrategia:
 //   1. Intenta scraping directo de bcv.org.ve (regex sobre el HTML público)
 //   2. Si falla (SSL, cambio de estructura, timeout), fallback a
-//      pydolarvenezuela-api.vercel.app (proxy gratuito y mantenido)
+//      ve.dolarapi.com (API JSON pública con la tasa oficial BCV)
 //   3. Inserta nueva fila en `tasa_bcv` con la tasa obtenida
 //
 // El BCV solo publica tasa de lunes a viernes; en fines de semana mantiene
@@ -20,7 +22,9 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BCV_URL = "https://www.bcv.org.ve/";
-const PYDOLAR_URL = "https://pydolarvenezuela-api.vercel.app/api/v1/dollar?monitor=bcv";
+// dolarapi.com expone la tasa oficial BCV con un schema estable y baja latencia.
+// Sustituyó a pydolarvenezuela-api.vercel.app, que fue descontinuado.
+const DOLARAPI_URL = "https://ve.dolarapi.com/v1/dolares/oficial";
 const TIMEOUT_MS = 8000;
 
 export async function GET(request) {
@@ -55,8 +59,9 @@ export async function GET(request) {
     if (res.ok) {
       const html = await res.text();
       // El HTML del BCV tiene una sección con id="dolar" que contiene la
-      // tasa dentro de un <strong>. Formato VE: "61,2600" (coma decimal).
-      const match = html.match(/id=["']dolar["'][\s\S]*?<strong>\s*([\d.,]+)\s*<\/strong>/i);
+      // tasa dentro de un <strong>. Formato VE: "510,7873" (coma decimal).
+      // El <strong> puede tener atributos (e.g. class="strong-tb") — aceptamos cualquier atributo.
+      const match = html.match(/id=["']dolar["'][\s\S]*?<strong[^>]*>\s*([\d.,]+)\s*<\/strong>/i);
       if (match) {
         const raw = match[1].trim();
         // Normalizar: quitar puntos de miles, cambiar coma decimal a punto
@@ -73,27 +78,28 @@ export async function GET(request) {
     errores.push({ source: "bcv", error: e.message || String(e) });
   }
 
-  // 3. Fallback: pydolarvenezuela
+  // 3. Fallback: dolarapi.com
+  // Schema: { promedio: 510.7873, fechaActualizacion: "2026-05-14T...", ... }
   if (!tasa) {
     try {
-      const res = await fetch(PYDOLAR_URL, {
+      const res = await fetch(DOLARAPI_URL, {
         signal: AbortSignal.timeout(TIMEOUT_MS),
         headers: { Accept: "application/json" },
       });
       if (res.ok) {
         const data = await res.json();
-        const price = data?.monitors?.bcv?.price ?? data?.price ?? data?.monitor?.price;
+        const price = data?.promedio;
         if (Number.isFinite(price) && price > 0) {
           tasa = price;
-          fuente = "pydolarvenezuela";
+          fuente = "dolarapi.com";
         } else {
-          errores.push({ source: "pydolarvenezuela", error: "respuesta sin price válido" });
+          errores.push({ source: "dolarapi", error: "respuesta sin promedio válido" });
         }
       } else {
-        errores.push({ source: "pydolarvenezuela", status: res.status });
+        errores.push({ source: "dolarapi", status: res.status });
       }
     } catch (e) {
-      errores.push({ source: "pydolarvenezuela", error: e.message || String(e) });
+      errores.push({ source: "dolarapi", error: e.message || String(e) });
     }
   }
 
