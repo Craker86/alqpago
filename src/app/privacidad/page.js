@@ -24,7 +24,7 @@ export default function Privacidad() {
             <h1 className="text-2xl font-bold text-fg">Política de privacidad</h1>
           </div>
           <p className="text-sm text-fg-muted mt-2">
-            Vigente desde el 5 de mayo de 2026 · Última actualización 5 de mayo de 2026
+            Vigente desde el 5 de mayo de 2026 · Última actualización 14 de mayo de 2026
           </p>
         </header>
 
@@ -93,7 +93,21 @@ export default function Privacidad() {
               <li>Histórico de score y eventos de scoring</li>
             </ul>
 
-            <h3 className="font-semibold text-fg mt-4 mb-2">D) Datos técnicos</h3>
+            <h3 className="font-semibold text-fg mt-4 mb-2">D) Conversaciones internas</h3>
+            <ul className="list-disc ml-5 space-y-1 text-fg-muted">
+              <li><strong>Mensajes</strong> intercambiados entre inquilino y propietario en hilos internos de la plataforma</li>
+              <li><strong>Marcas temporales</strong>: cuándo se envió cada mensaje y cuándo fue leído</li>
+            </ul>
+            <p className="mt-2 text-fg-muted">
+              <strong>Por qué los conservamos</strong>: en los modos Protegido y Premium, Rentto puede cubrir impagos.
+              Las conversaciones constituyen evidencia en caso de disputas (avisos de pago tardío, reclamos por estado
+              del inmueble, comunicaciones sobre el contrato). Por eso los mensajes <strong>no se pueden borrar</strong>{" "}
+              una vez enviados, ni siquiera por su autor. Si querés que se elimine una conversación completa, contactanos
+              a <a href="mailto:privacidad@renttove.com" className="text-brand-700 font-semibold hover:underline">privacidad@renttove.com</a>{" "}
+              y evaluaremos caso por caso (puede haber obligaciones legales o contractuales que impidan el borrado).
+            </p>
+
+            <h3 className="font-semibold text-fg mt-4 mb-2">E) Datos técnicos</h3>
             <ul className="list-disc ml-5 space-y-1 text-fg-muted">
               <li>Dirección IP, user agent, navegador y dispositivo</li>
               <li>Métricas de uso anónimas vía Vercel Analytics y Speed Insights</li>
@@ -145,6 +159,10 @@ export default function Privacidad() {
                 <tr>
                   <td className="p-2">Pagos y comprobantes</td>
                   <td className="p-2 text-fg-muted">Mientras tu cuenta esté activa + 5 años por obligación contable</td>
+                </tr>
+                <tr>
+                  <td className="p-2">Mensajes y conversaciones internas</td>
+                  <td className="p-2 text-fg-muted">Permanente mientras la cuenta esté activa (audit trail para disputas)</td>
                 </tr>
                 <tr>
                   <td className="p-2">Notificaciones y logs de actividad</td>
