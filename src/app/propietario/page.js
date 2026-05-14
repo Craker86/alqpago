@@ -23,7 +23,7 @@ import {
   Plus,
 } from "lucide-react";
 import { MODOS_LISTA, getModo, toneDeModo as toneDeModoProp } from "../lib/modos";
-import { fechaCompleta } from "../lib/format";
+import { fechaCompleta, formatUsd } from "../lib/format";
 
 export default function Propietario() {
   const router = useRouter();
@@ -199,8 +199,8 @@ export default function Propietario() {
             {hoy.toLocaleDateString("es-VE", { month: "long", year: "numeric" })}
           </p>
           <div className="flex items-baseline gap-2 mt-1">
-            <p className="text-3xl font-bold">${cobradoMes.toLocaleString("es-VE")}</p>
-            <p className="text-sm opacity-70">/ ${esperadoMes.toLocaleString("es-VE")} esperado</p>
+            <p className="text-3xl font-bold tracking-tight">{formatUsd(cobradoMes)}</p>
+            <p className="text-sm opacity-70">/ {formatUsd(esperadoMes)} esperado</p>
           </div>
           <div className="mt-3 h-2 w-full rounded-pill bg-white/15 overflow-hidden">
             <div
@@ -213,7 +213,7 @@ export default function Propietario() {
               {porcentaje.toFixed(0)}% cobrado
             </span>
             <span className="font-semibold">
-              ${Math.max(0, esperadoMes - cobradoMes).toLocaleString("es-VE")} pendiente
+              {formatUsd(Math.max(0, esperadoMes - cobradoMes))} pendiente
             </span>
           </div>
         </section>
@@ -263,7 +263,7 @@ export default function Propietario() {
                       Vence en {c.diasRestantes} {c.diasRestantes === 1 ? "día" : "días"}
                     </p>
                   </div>
-                  <p className="text-sm font-bold text-brand-700 flex-shrink-0">${c.monto}</p>
+                  <p className="text-sm font-bold text-brand-700 flex-shrink-0">{formatUsd(c.monto)}</p>
                 </article>
               ))}
             </div>
@@ -485,7 +485,7 @@ function PropiedadView({ prop, onEdit, onPhotoClick, onRemovePhoto }) {
       </div>
 
       <div className="flex justify-between items-center mt-3">
-        <span className="text-sm font-bold text-brand-700">${prop.monto_mensual}/mes</span>
+        <span className="text-sm font-bold text-brand-700">{formatUsd(prop.monto_mensual)}/mes</span>
         <span className="inline-flex items-center text-[11px] bg-brand-50 text-brand-700 px-2.5 py-1 rounded-pill font-semibold">
           Corte día {prop.dia_corte}
         </span>
@@ -645,7 +645,7 @@ function PagoCard({ pago, onConfirm, onReject }) {
       <div className="flex justify-between items-start gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-fg">
-            ${pago.monto} · {pago.metodo}
+            {formatUsd(pago.monto)} · {pago.metodo}
           </p>
           <p className="text-xs text-fg-muted mt-0.5">
             {new Date(pago.fecha_pago).toLocaleDateString("es-VE", {

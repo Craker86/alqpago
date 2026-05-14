@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import { formatUsd } from "../lib/format";
 import {
   ArrowLeft,
   Check,
@@ -255,7 +256,7 @@ function CobroCard({ pago, accionando, onConfirmar, onRechazar }) {
 
       {/* Datos del pago */}
       <div className="p-4 space-y-2 bg-surface-subtle">
-        <Row label="Monto" value={`$${pago.monto}`} valueClass="text-brand-700 font-bold text-base" />
+        <Row label="Monto" value={formatUsd(pago.monto)} valueClass="text-brand-700 font-bold text-base" />
         <Row label="Método" value={pago.metodo || "—"} />
         <Row label="Fecha" value={fechaTexto} icon={Calendar} />
         {pago.referencia && (
@@ -373,7 +374,7 @@ function RecienteRow({ pago }) {
       <Icon size={18} className={`${tone} flex-shrink-0`} strokeWidth={2.25} />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-fg truncate">
-          {nombre} · ${pago.monto}
+          {nombre} · {formatUsd(pago.monto)}
         </p>
         <p className="text-[10px] text-fg-muted truncate">
           {pago.propiedad?.nombre || "—"} · {pago.metodo}
