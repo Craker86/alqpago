@@ -1,8 +1,30 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 11 mayo 2026 (marketplace Airbnb-style + copy minimalista)
+**Última actualización:** 11 mayo 2026 (sesión extendida — marketplace + tipografía + auditoría + BCV)
 
 ## ✅ Completado en sesión 11 may
+
+### Tasa BCV automática + formato VE
+- [x] **`/api/cron/tasa-bcv`**: scrapea bcv.org.ve (regex sobre `<strong>` dentro del bloque `id="dolar"`) con fallback a `pydolarvenezuela-api.vercel.app`. Auth con `CRON_SECRET`. Insert en `tasa_bcv` con service_role. Timeout 8s por intento
+- [x] **Cron diario** a las 12:00 UTC (8 AM hora VE) — limitación de Vercel Hobby es 1 vez/día. Suficiente porque BCV publica una vez por día hábil
+- [x] **`lib/format.js`**: helpers `formatBs`, `formatUsd`, `formatTasa`, `tiempoRelativo`, `fechaCompleta`, `fechaCorta` con locale `es-VE`
+- [x] **Dashboard HeroDelMes**: muestra monto en USD + equivalente Bs. formato VE (`Bs. 61.260,00`) + línea pequeña con tasa explícita y antigüedad (`1 USD = Bs. 61,26 · BCV hace 2h`)
+- [x] **Fecha actual visible** debajo del saludo en dashboard inquilino y propietario (`Lunes, 11 de mayo de 2026`). Se actualiza sola al cambiar el día. Función `fechaCompleta()` capitaliza el weekday
+
+### Tipografía moderna (2 iteraciones)
+- [x] **Plus Jakarta Sans** (PR #2) — primer cambio. Más geométrica, premium
+- [x] **Onest** (PR #3) — segunda iteración. Más distintiva, con caracter
+- [x] Tracking apretado en h1/h2 (-0.03em / -0.02em) para feel SaaS premium
+- [x] `font-feature-settings` removido en favor de defaults Onest
+- [x] Title actualizado: "Rentto - Paga tu alquiler fácil" → "Rentto · Alquilar en Venezuela"
+
+### Auditoría completa de seguridad e infraestructura
+- [x] **`src/lib/supabase.js` borrado** (archivo huérfano con anon key hardcoded — no se importaba en ningún lado)
+- [x] **`.env.example` documentado** con `CRON_SECRET` y `SUPABASE_SERVICE_ROLE_KEY` + comentarios
+- [x] **Branch protection en `main` activado** (GitHub ruleset): require PR, linear history, restrict deletions, block force pushes. Todos los cambios de hoy en adelante pasan por PR squashed
+- [x] **Env vars en Vercel**: `CRON_SECRET` + `SUPABASE_SERVICE_ROLE_KEY` agregadas a Production y Preview
+- [x] **Vercel Analytics + Speed Insights**: ambos enabled. Analytics ya recolectando data (20 visitas en 7 días, mostly Cracker86 admin)
+- [x] **Test del cron de retención** via curl: respuesta `{"ok":true,"candidatas":0,...}` — endpoint, auth y service_role todos funcionando
 
 ### Marketplace Airbnb-style
 - [x] **`PhotoCarousel.js`** reutilizable: scroll-snap horizontal + dot indicators + lazy loading desde la segunda foto + onClick opcional
@@ -168,11 +190,13 @@
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **Configurar env vars en Vercel** (`CRON_SECRET` + `SUPABASE_SERVICE_ROLE_KEY`) para que el cron de retención funcione
-2. **Probar live capture end-to-end** desde mobile (Android Chrome + iOS Safari) y desktop
-3. **Probar el cron manualmente** (`curl` con `Authorization: Bearer ${CRON_SECRET}`) antes de esperar el schedule diario
-4. **Plan de piloto** — 10 candidatos en Caracas, agenda de outreach (acción operativa, no técnica)
-5. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC end-to-end)
-6. **Subir DMARC** a `p=quarantine` después de 1-2 semanas en `p=none`
-7. **(Crecimiento)** Sumar match biométrico automático con AWS Rekognition (~$0.001/check) cuando volumen lo justifique. Plan B: face-api.js (gratis, browser, menos preciso)
-8. **(Crecimiento)** Crear `privacidad@renttove.com` como inbox real (vía Resend o forward a Gmail) para responder solicitudes de derechos del titular
+1. **Mergear este PR de cierre** (docs/cierre-sesion-11may) — actualiza ESTADO.md con todo lo de hoy
+2. **Limpiar fotos de prueba** — correr `supabase-cleanup-fotos-prueba.sql` en Supabase (Opción A vacía todas las fotos). El usuario pospuso esto a mañana
+3. **Verificar el cron de tasa BCV** corrió a las 8 AM hoy — ver en Vercel → Logs filtrar `/api/cron/tasa-bcv`. Debería haber insertado una nueva fila en `tasa_bcv`
+4. **Subir fotos reales a las propiedades** desde la cuenta del propietario y probar el carousel del marketplace en vivo
+5. **Plan de piloto en Caracas** — 10 candidatos + outreach
+6. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC)
+7. **Subir DMARC** a `p=quarantine` cuando lleve 1-2 semanas en `p=none`
+8. **(Crecimiento)** Aplicar formato VE (`Bs. 61.260,00`) en `/pagar`, `/recibos`, `/cobros`, `/propietario` — hoy solo está en el dashboard
+9. **(Crecimiento)** Match biométrico con face-api.js o AWS Rekognition
+10. **(Crecimiento)** Crear `privacidad@renttove.com` como inbox real
