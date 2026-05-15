@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, MessageCircle } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
 export default function TopBar() {
@@ -11,6 +11,7 @@ export default function TopBar() {
   const [nombre, setNombre] = useState("");
   const [rol, setRol] = useState(null);
   const [unreads, setUnreads] = useState(0);
+  const [msgUnreads, setMsgUnreads] = useState(0);
 
   useEffect(() => {
     async function cargar() {
@@ -32,6 +33,24 @@ export default function TopBar() {
         .eq("user_id", session.user.id)
         .eq("leida", false);
       if (typeof count === "number") setUnreads(count);
+
+      // Conteo de mensajes sin leer (donde no soy el autor)
+      const { data: convs } = await supabase
+        .from("conversaciones")
+        .select("id")
+        .or(`propietario_id.eq.${session.user.id},inquilino_id.eq.${session.user.id}`);
+      const convIds = (convs || []).map((c) => c.id);
+      if (convIds.length > 0) {
+        const { count: msgCount } = await supabase
+          .from("mensajes")
+          .select("*", { count: "exact", head: true })
+          .in("conversacion_id", convIds)
+          .neq("autor_id", session.user.id)
+          .is("leido_at", null);
+        if (typeof msgCount === "number") setMsgUnreads(msgCount);
+      } else {
+        setMsgUnreads(0);
+      }
     }
     cargar();
   }, [pathname]);
@@ -54,7 +73,19 @@ export default function TopBar() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Link
+            href="/mensajes"
+            aria-label={`Mensajes${msgUnreads > 0 ? ` (${msgUnreads} sin leer)` : ""}`}
+            className="relative p-1.5 rounded-pill text-fg-muted hover:text-fg hover:bg-surface-subtle transition"
+          >
+            <MessageCircle size={20} strokeWidth={2} />
+            {msgUnreads > 0 && (
+              <span className="absolute top-0 right-0 min-w-[16px] h-4 px-1 bg-danger-600 text-white rounded-pill text-[9px] font-bold flex items-center justify-center ring-2 ring-surface">
+                {msgUnreads > 9 ? "9+" : msgUnreads}
+              </span>
+            )}
+          </Link>
           <Link
             href="/notificaciones"
             aria-label={`Notificaciones${unreads > 0 ? ` (${unreads} sin leer)` : ""}`}

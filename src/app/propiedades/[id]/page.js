@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { getModo, toneDeModo } from "../../lib/modos";
 import { calcularScore } from "../../lib/scoring";
+import { obtenerOCrearConversacion } from "../../lib/conversaciones";
 import PhotoCarousel from "../PhotoCarousel";
 
 const STORAGE_KEY = "rentto_favoritos";
@@ -171,11 +172,17 @@ export default function PropiedadDetalle() {
   const requerido = modo.scoreMinimo;
   const calificas = esInquilino ? myScore >= requerido : null;
 
-  const waHref = host?.telefono
-    ? `https://wa.me/${host.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(
-        `Hola, vi ${prop.nombre} en Rentto y me interesa.`
-      )}`
-    : null;
+  async function abrirConversacion() {
+    try {
+      const conv = await obtenerOCrearConversacion({
+        propiedadId: prop.id,
+        propietarioId: prop.user_id,
+      });
+      router.push(`/mensajes/${conv.id}`);
+    } catch (e) {
+      alert(e.message || "No se pudo abrir la conversación");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-surface pb-32">
@@ -323,16 +330,14 @@ export default function PropiedadDetalle() {
               <p className="text-[10px] text-fg-muted">/ mes</p>
             </div>
             <div className="flex-1 flex gap-2">
-              {waHref && (
-                <a
-                  href={waHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              {esInquilino && (
+                <button
+                  onClick={abrirConversacion}
                   className="inline-flex items-center justify-center w-11 h-11 border border-stroke rounded-pill text-fg hover:bg-surface-subtle transition"
-                  aria-label="WhatsApp"
+                  aria-label="Consultar al propietario"
                 >
                   <MessageCircle size={16} strokeWidth={2.25} />
-                </a>
+                </button>
               )}
               {esInquilino ? (
                 <Link

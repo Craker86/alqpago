@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldQuestion,
+  MessageCircle,
 } from "lucide-react";
 
 const EVENTOS_INQUILINO = [
@@ -33,6 +34,10 @@ const EVENTOS_VERIFICACION = [
   { id: "verificacion_requiere_reenvio", titulo: "Reenvío requerido", desc: "Cuando necesitamos que reenvíes algunos documentos", Icon: ShieldQuestion, tone: "warning" },
 ];
 
+const EVENTOS_MENSAJERIA = [
+  { id: "mensaje_recibido", titulo: "Mensaje nuevo", desc: "Cuando alguien te escribe en una conversación", Icon: MessageCircle, tone: "brand" },
+];
+
 const DEFAULT_PREFS = {
   pago_confirmado: { in_app: true, email: true },
   pago_rechazado: { in_app: true, email: true },
@@ -41,6 +46,7 @@ const DEFAULT_PREFS = {
   verificacion_aprobada: { in_app: true, email: true },
   verificacion_rechazada: { in_app: true, email: true },
   verificacion_requiere_reenvio: { in_app: true, email: true },
+  mensaje_recibido: { in_app: true, email: true },
 };
 
 export default function PreferenciasNotif() {
@@ -108,6 +114,7 @@ export default function PreferenciasNotif() {
     ...(rol === "propietario"
       ? [...EVENTOS_INQUILINO, ...EVENTOS_PROPIETARIO]
       : EVENTOS_INQUILINO),
+    ...EVENTOS_MENSAJERIA,
     ...EVENTOS_VERIFICACION,
   ];
 

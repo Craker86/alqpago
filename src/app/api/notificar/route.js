@@ -177,7 +177,32 @@ function construirPlantilla(tipo, data, appUrl, host) {
         "Reenviar documentos"
       );
 
+    case "mensaje_recibido": {
+      const autor = escapeHtml(data.autor_nombre || "alguien");
+      const propNombre = escapeHtml(data.propiedad_nombre || "una propiedad");
+      const preview = escapeHtml(data.preview || "");
+      return wrap(
+        "Mensaje nuevo de " + autor,
+        "Sobre " + propNombre,
+        `<div style="background: #ffffff; border-left: 3px solid #065f46; padding: 12px 14px; border-radius: 6px;">
+           <p style="font-size: 13px; color: #374151; margin: 0; white-space: pre-wrap;">${preview}</p>
+         </div>
+         <p style="font-size: 12px; color: #6b7280; margin-top: 12px;">Respondé desde Rentto para mantener la conversación trazable.</p>`,
+        `${appUrl}/mensajes/${data.conversacion_id}`,
+        "Responder en Rentto"
+      );
+    }
+
     default:
       return null;
   }
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
