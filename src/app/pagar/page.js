@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import { formatBs, formatUsd, formatTasa, tiempoRelativo } from "../lib/format";
 import {
   ArrowLeft,
   Smartphone,
@@ -31,6 +32,8 @@ export default function Pagar() {
   const [refPago, setRefPago] = useState("");
   const [bancoOrigen, setBancoOrigen] = useState("");
   const [cedulaPago, setCedulaPago] = useState("");
+  const [tasa, setTasa] = useState(0);
+  const [tasaActualizada, setTasaActualizada] = useState(null);
 
   const metodos = [
     { id: "pago-movil", nombre: "Pago móvil", detalle: "Banesco · 0412-XXX-XX45", tag: "Instantáneo", tagTone: "success", Icon: Smartphone },
@@ -54,6 +57,19 @@ export default function Pagar() {
         .limit(1)
         .maybeSingle();
       setPropiedad(vinculacion?.propiedades || null);
+
+      // Última tasa BCV — para mostrar equivalente Bs y guardarlo en el pago
+      const { data: tasaData } = await supabase
+        .from("tasa_bcv")
+        .select("tasa, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (tasaData) {
+        setTasa(tasaData.tasa);
+        setTasaActualizada(tasaData.created_at);
+      }
+
       setCargando(false);
     }
     cargar();
@@ -108,7 +124,9 @@ export default function Pagar() {
       propiedad_id: propiedad.id,
       user_id: session.user.id,
       monto: propiedad.monto_mensual,
-      monto_bs: propiedad.monto_mensual * 45.20,
+      // Snapshot del equivalente Bs al momento del pago, usando la última tasa BCV
+      // del DB. Si no hay tasa disponible, no inventamos — queda null.
+      monto_bs: tasa > 0 ? propiedad.monto_mensual * tasa : null,
       metodo: metodo.nombre,
       referencia: refPago || "REF-" + Date.now(),
       estado: "pendiente",
@@ -197,7 +215,7 @@ export default function Pagar() {
             </div>
             <h2 className="text-xl font-bold text-fg mt-4">Pago registrado</h2>
             <p className="text-sm text-fg-muted mt-2 leading-relaxed">
-              Tu pago de <span className="font-semibold text-brand-700">${propiedad.monto_mensual}</span> fue enviado. El propietario será notificado y confirmará en minutos.
+              Tu pago de <span className="font-semibold text-brand-700">{formatUsd(propiedad.monto_mensual)}</span> fue enviado. El propietario será notificado y confirmará en minutos.
             </p>
 
             <div className="bg-surface-subtle rounded-card p-4 mt-4 text-left space-y-2.5">
@@ -242,10 +260,20 @@ export default function Pagar() {
 
         <section className="bg-brand-800 text-fg-inverse rounded-card p-5 mt-4 text-center shadow-elevated">
           <p className="text-[11px] uppercase tracking-wide opacity-80">Total a pagar</p>
-          <p className="text-4xl font-bold mt-1">${propiedad?.monto_mensual}</p>
-          <p className="text-xs opacity-70 mt-1">
-            Bs. {(propiedad?.monto_mensual * 45.20).toLocaleString("es-VE", { maximumFractionDigits: 2 })} · Tasa BCV
+          <p className="text-4xl font-bold mt-1 tracking-tight">
+            {formatUsd(propiedad?.monto_mensual)}
           </p>
+          {tasa > 0 && (
+            <p className="text-sm opacity-85 mt-1">
+              {formatBs(propiedad?.monto_mensual * tasa)}
+            </p>
+          )}
+          {tasa > 0 && (
+            <p className="text-[10px] opacity-60 mt-0.5">
+              1 USD = Bs. {formatTasa(tasa)}
+              {tasaActualizada && ` · BCV ${tiempoRelativo(tasaActualizada)}`}
+            </p>
+          )}
         </section>
 
         <h2 className="text-sm font-semibold text-fg mt-6 mb-3">Selecciona el método</h2>

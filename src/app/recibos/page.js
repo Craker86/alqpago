@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import { formatUsd } from "../lib/format";
 import { ArrowLeft, Paperclip, Receipt } from "lucide-react";
 
 export default function Recibos() {
@@ -67,7 +68,7 @@ export default function Recibos() {
                 <div className="flex justify-between items-start gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-fg">
-                      ${pago.monto} · {pago.metodo}
+                      {formatUsd(pago.monto)} · {pago.metodo}
                     </p>
                     <p className="text-xs text-fg-muted mt-0.5">
                       {new Date(pago.fecha_pago).toLocaleDateString("es-VE", {
