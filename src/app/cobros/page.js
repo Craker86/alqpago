@@ -19,6 +19,8 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  Search,
+  Hash,
 } from "lucide-react";
 
 export default function Cobros() {
@@ -27,6 +29,7 @@ export default function Cobros() {
   const [pendientes, setPendientes] = useState([]);
   const [recientes, setRecientes] = useState([]); // confirmados/rechazados de hoy
   const [accionando, setAccionando] = useState(null); // pago_id en proceso
+  const [busqueda, setBusqueda] = useState(""); // filtra por código Rentto o nombre
 
   async function cargar() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -185,20 +188,20 @@ export default function Cobros() {
           </p>
         </header>
 
+        {pendientes.length > 0 && (
+          <BuscadorCodigo valor={busqueda} onChange={setBusqueda} />
+        )}
+
         {pendientes.length === 0 ? (
           <EmptyState recientes={recientes} />
         ) : (
-          <div className="flex flex-col gap-3">
-            {pendientes.map((pago) => (
-              <CobroCard
-                key={pago.id}
-                pago={pago}
-                accionando={accionando === pago.id}
-                onConfirmar={() => decidir(pago.id, "confirmado")}
-                onRechazar={() => decidir(pago.id, "rechazado")}
-              />
-            ))}
-          </div>
+          <ListaPendientesFiltrada
+            pendientes={pendientes}
+            busqueda={busqueda}
+            accionando={accionando}
+            onConfirmar={(id) => decidir(id, "confirmado")}
+            onRechazar={(id) => decidir(id, "rechazado")}
+          />
         )}
 
         {recientes.length > 0 && pendientes.length > 0 && (
@@ -219,6 +222,54 @@ export default function Cobros() {
 }
 
 // ============================================================================
+
+function BuscadorCodigo({ valor, onChange }) {
+  return (
+    <div className="relative mb-3">
+      <Search size={14} strokeWidth={2.25} className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-subtle pointer-events-none" />
+      <input
+        type="text"
+        value={valor}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Buscar por código (R-…) o inquilino"
+        className="w-full pl-9 pr-3 py-2.5 border border-stroke bg-surface rounded-pill text-sm placeholder:text-fg-subtle focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200 transition"
+      />
+    </div>
+  );
+}
+
+function ListaPendientesFiltrada({ pendientes, busqueda, accionando, onConfirmar, onRechazar }) {
+  const q = busqueda.trim().toUpperCase();
+  const filtrados = q.length === 0
+    ? pendientes
+    : pendientes.filter((p) => {
+        const cod = (p.codigo_rentto || "").toUpperCase();
+        const nom = (p.inquilino?.nombre || "").toUpperCase();
+        return cod.includes(q) || nom.includes(q);
+      });
+
+  if (filtrados.length === 0) {
+    return (
+      <div className="bg-surface border border-stroke rounded-card p-6 text-center">
+        <p className="text-sm text-fg-muted">Sin resultados para "{busqueda}"</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {filtrados.map((pago) => (
+        <CobroCard
+          key={pago.id}
+          pago={pago}
+          accionando={accionando === pago.id}
+          onConfirmar={() => onConfirmar(pago.id)}
+          onRechazar={() => onRechazar(pago.id)}
+        />
+      ))}
+    </div>
+  );
+}
 
 function CobroCard({ pago, accionando, onConfirmar, onRechazar }) {
   const inquilino = pago.inquilino;
@@ -257,10 +308,18 @@ function CobroCard({ pago, accionando, onConfirmar, onRechazar }) {
       {/* Datos del pago */}
       <div className="p-4 space-y-2 bg-surface-subtle">
         <Row label="Monto" value={formatUsd(pago.monto)} valueClass="text-brand-700 font-bold text-base" />
+        {pago.codigo_rentto && (
+          <Row
+            label="Código Rentto"
+            value={pago.codigo_rentto}
+            valueClass="text-fg font-mono tracking-wider font-bold"
+            icon={Hash}
+          />
+        )}
         <Row label="Método" value={pago.metodo || "—"} />
         <Row label="Fecha" value={fechaTexto} icon={Calendar} />
         {pago.referencia && (
-          <Row label="Referencia" value={pago.referencia} />
+          <Row label="Ref. del banco" value={pago.referencia} />
         )}
         {inquilino?.telefono && (
           <Row label="Teléfono" value={inquilino.telefono} icon={Phone} />
