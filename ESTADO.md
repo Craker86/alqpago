@@ -1,6 +1,49 @@
 # Estado del Proyecto — Rentto
 
-**Última actualización:** 11 mayo 2026 (sesión extendida — marketplace + tipografía + auditoría + BCV)
+**Última actualización:** 14 mayo 2026 (sesión extendida — fix BCV + formato VE + mensajería + métodos de cobro)
+
+## ✅ Completado en sesión 14 may
+
+Cuatro PRs grandes mergeados a main: #7, #8, #9 y #10/#11.
+
+### Fix del cron BCV (PR #7)
+- [x] **Diagnóstico**: el cron no insertó tasas el 13 y 14 may por dos bugs encadenados. La última fila en `tasa_bcv` era del 15 abr (pre-feature). 30 días sin actualización
+- [x] **Bug #1 — Regex roto**: el BCV cambió el HTML y ahora envuelve la tasa en `<strong class="strong-tb">`. El regex anterior exigía `<strong>` literal. Fix: `<strong[^>]*>`
+- [x] **Bug #2 — Fallback muerto**: `pydolarvenezuela-api.vercel.app` descontinuado (`DEPLOYMENT_NOT_FOUND`). Reemplazado por `ve.dolarapi.com/v1/dolares/oficial`
+
+### Formato es-VE en /pagar /recibos /cobros /propietario (PR #8)
+- [x] **`/pagar` replica el patrón del dashboard**: hero con USD + equivalente Bs + tasa BCV con antigüedad
+- [x] **Bug crítico arreglado**: la tasa BCV estaba **hardcoded a 45.20** en /pagar. La tasa real es ~510. Cada pago insertaba `monto_bs` ~10x menor al correcto. Ahora usa la tasa real del DB; si no hay tasa, `monto_bs` queda null
+- [x] **`/recibos`, `/cobros`, `/propietario`**: `formatUsd` aplicado a todos los montos visibles
+
+### Mensajería interna inquilino ↔ propietario (PR #9)
+- [x] **Schema** (`supabase-mensajeria.sql`): `conversaciones` (1 por par propiedad+inquilino) + `mensajes` (audit trail, no editables, no borrables). Triggers para `vinculacion_id` automático, notif inbox y rate limit 10/24h
+- [x] **Realtime**: ambas tablas en `supabase_realtime`. Hook `useConversacion` subscribe a INSERT y UPDATE
+- [x] **`/mensajes`** y **`/mensajes/[id]`** con burbujas estilo iMessage, autoscroll, check sent/read, optimistic update
+- [x] **WhatsApp sale del marketplace**: `/propiedades/[id]` ahora tiene "Consultar" que abre/crea conversación
+- [x] **TopBar**: nuevo ícono Mensajes con badge separado del Bell
+- [x] **Privacidad**: sección sobre conversaciones internas + audit trail + retención
+
+### Métodos de cobro del propietario + código único (PR #10/#11)
+- [x] **Schema** (`supabase-metodos-cobro-y-codigo.sql`): tabla `metodos_cobro` (1 por (propietario, tipo)), 5 tipos. RLS: dueño gestiona los suyos, inquilinos vinculados leen
+- [x] **`pagos.codigo_rentto`**: TEXT UNIQUE generado por función Postgres `generar_codigo_pago()` + trigger BEFORE INSERT. Formato `R-XXXXXX` (alfabeto sin chars confundibles, 481M combinaciones)
+- [x] **`/metodos-pago` rediseñado**: era una lista estática informativa. Ahora es CRUD completo para el propietario con toggle activo/pausado por método
+- [x] **`/pagar` rediseñado**: array hardcoded reemplazado por carga dinámica desde `metodos_cobro` del propietario. Cuando el inquilino elige método ve los datos REALES con botones copy individual y "Copiar todo". Código Rentto destacado con copy
+- [x] **`/cobros` con búsqueda**: input "Buscar por código (R-…)" arriba. Filter client-side por código o nombre. Cada CobroCard muestra el código Rentto destacado
+- [x] Bug crítico cerrado: hasta hoy los datos bancarios del propietario se compartían por WhatsApp. Ahora viven en la app, son trazables y los inquilinos los copian con un tap
+
+### Wait list de pre-registro
+- [x] **`supabase-wait-list.sql` corrido** en Supabase. Tabla activa + RLS
+
+## 📋 Decisiones tomadas en esta sesión
+
+- **Threads de mensajería: por vinculación, no por persona.** Tendencia en real estate (Airbnb, Booking, Zillow) porque cada contrato es una unidad jurídica con disputas independientes
+- **WhatsApp sale del marketplace completamente.** Reemplazado por mensajería interna con rate limit (10/24h) pre-vinculación. Razones: audit trail desde día 1, no exposición del teléfono del propietario, evidencia para disputas en Protegido/Premium
+- **Mensajes son audit trail estricto.** No editables, no borrables por usuarios. Solo admin puede borrar caso por caso por solicitud de privacidad
+- **Tasa BCV: si la fuente falla, no inventar.** `monto_bs` queda null si no hay tasa. Mejor que escribir un valor falso (que es exactamente lo que causaba el bug de 45.20)
+- **Pagos "directamente en la app" = Escenario 2** (menos fricción, mismo flujo bancario). NO custodia/escrow (Escenario 3) porque requiere entidad legal constituida, que está pendiente
+- **Código único por pago = clave del flujo nuevo.** El inquilino lo pega en el concepto del banco, el propietario lo busca en /cobros para emparejar. Reemplaza la comparación manual de fechas/montos/fotos
+- **Métodos de cobro por PROPIETARIO, no por propiedad.** Un dueño con 3 inmuebles típicamente cobra a la misma cuenta. Simplifica todo
 
 ## ✅ Completado en sesión 11 may
 
@@ -136,15 +179,13 @@
 
 ## ⏳ Pendiente
 
-### Acciones tuyas (Supabase)
+### Acciones tuyas (Supabase) — todas al día
 - [x] ~~Correr `supabase-notif-prefs.sql`~~ (corrido)
 - [x] ~~Correr `supabase-verificaciones.sql`~~ (corrido)
 - [x] ~~Correr `supabase-verificaciones-trigger.sql`~~ (corrido)
-- [ ] **Correr `supabase-wait-list.sql`** (tabla wait_list + RLS de insert público + select/update/delete admin)
-
-### Acciones tuyas (Vercel env vars)
-- [ ] **Agregar `CRON_SECRET`** en Vercel → Settings → Environment Variables. Generá un string random largo (~32 chars). El cron de retención lo usa para autenticar el llamado
-- [ ] **Agregar `SUPABASE_SERVICE_ROLE_KEY`** en Vercel → Settings → Environment Variables. Lo encontrás en Supabase → Project Settings → API → "service_role" key (la **secreta**, no la anon). El cron lo usa para borrar archivos del bucket bypassando RLS
+- [x] ~~Correr `supabase-wait-list.sql`~~ (corrido 14 may)
+- [x] ~~Correr `supabase-mensajeria.sql`~~ (corrido 14 may)
+- [x] ~~Correr `supabase-metodos-cobro-y-codigo.sql`~~ (corrido 14 may)
 
 ### Acciones tuyas (Vercel UI)
 - [ ] Activar Web Analytics toggle en sidebar "Analítica"
@@ -158,45 +199,76 @@
 - [ ] Probar envío real de email desde producción a un destinatario externo (validar SPF/DKIM/DMARC end-to-end)
 - [ ] Considerar subir DMARC de `p=none` a `p=quarantine` cuando confirmemos que todos los emails legítimos pasan
 
-## 📋 Decisiones tomadas en esta sesión
+## 📂 Archivos SQL corridos (todos al día)
 
-- **Score histórico vs score visible:** dos modelos. `score_historial.score_total` es ledger acumulativo de eventos de pago. El score de la card son 6 criterios escalados a 100. UI lo aclara
-- **Notificaciones INSERT:** solo via triggers SECURITY DEFINER. Cliente NO inserta directamente
-- **Email enforcement:** preferencias se respetan en dos lugares — triggers chequean `in_app`, clientes chequean `email` antes de llamar `/api/notificar`
-- **CSV export:** BOM UTF-8 para que Excel abra acentos/ñ correctamente en Windows
-- **Dashboard estado del mes:** lógica centralizada en `calcularEstadoMes()` con 5 ramas (confirmado/pendiente/rechazado/vencido/sin_pagar_aun)
+1. `supabase-rls.sql` — policies
+2. `supabase-score-trigger.sql` — trigger de score
+3. `supabase-notificaciones.sql` — inbox
+4. `supabase-perfiles-email.sql` — email column
+5. `supabase-notif-prefs.sql` — preferencias
+6. `supabase-verificaciones.sql` — KYC tabla + bucket + RLS + admin
+7. `supabase-verificaciones-trigger.sql` — trigger notif inbox al cambiar estado
+8. `supabase-wait-list.sql` — wait list piloto
+9. `supabase-mensajeria.sql` — conversaciones + mensajes + RLS + triggers + Realtime
+10. `supabase-metodos-cobro-y-codigo.sql` — métodos de cobro + código único por pago + función generadora
 
-## 📂 Archivos SQL pendientes de correr (en orden)
+## 📂 Archivos clave (14 may)
 
-1. `supabase-rls.sql` — policies (ya corrido)
-2. `supabase-score-trigger.sql` — trigger de score (ya corrido)
-3. `supabase-notificaciones.sql` — inbox (ya corrido)
-4. `supabase-perfiles-email.sql` — email column (ya corrido)
-5. `supabase-notif-prefs.sql` — preferencias (ya corrido)
-6. `supabase-verificaciones.sql` — KYC tabla + bucket + RLS + admin (ya corrido)
-7. `supabase-verificaciones-trigger.sql` — trigger notif inbox al cambiar estado (ya corrido)
-8. `supabase-wait-list.sql` — tabla wait_list para piloto (**pendiente**)
+### Mensajería
+- `supabase-mensajeria.sql` — tabla + RLS + 5 triggers + Realtime
+- `src/app/lib/conversaciones.js`, `useConversacion.js`
+- `src/app/mensajes/page.js`, `mensajes/[id]/page.js`
+- `src/app/MessageBubble.js`, `MessageInput.js`, `ThreadCard.js`
 
-## 📂 Archivos clave en esta sesión
+### Métodos de cobro + código
+- `supabase-metodos-cobro-y-codigo.sql` — tabla + RLS + función + trigger
+- `src/app/lib/metodosCobro.js` — catálogo + helpers
+- `src/app/metodos-pago/page.js` — CRUD del propietario
+- `src/app/pagar/page.js` — carga dinámica + datos copy + código
+- `src/app/cobros/page.js` — búsqueda por código
 
-- `supabase-score-trigger.sql`, `supabase-notificaciones.sql`, `supabase-perfiles-email.sql`, `supabase-notif-prefs.sql`
-- `src/app/lib/scoring.js`, `src/app/lib/modos.js`
-- `src/app/modos/page.js` — landing pública
-- `src/app/notificaciones/page.js` — inbox
-- `src/app/notificaciones/preferencias/page.js` — preferencias
-- `src/app/dashboard/page.js` — dinámico con ProximaAccion + ScoreMiniCard
-- `src/app/PWAInstaller.js` — registro SW + install prompt
-- `public/sw.js`, `public/manifest.json` — PWA shell
+### BCV + formato
+- `src/app/api/cron/tasa-bcv/route.js` — regex tolerante + fallback dolarapi.com
+- `src/app/lib/format.js` — helpers formatBs/formatUsd/formatTasa
+- `src/app/pagar/page.js`, `recibos/page.js`, `cobros/page.js`, `propietario/page.js`
+
+### Otros
+- `src/app/TopBar.js` — ícono Mensajes nuevo
+- `src/app/propiedades/[id]/page.js` — botón Consultar
+- `src/app/api/notificar/route.js` — template `mensaje_recibido`
+- `src/app/privacidad/page.js` — sección conversaciones
 
 ## 🎯 Próxima sesión — prioridades
 
-1. **Mergear este PR de cierre** (docs/cierre-sesion-11may) — actualiza ESTADO.md con todo lo de hoy
-2. **Limpiar fotos de prueba** — correr `supabase-cleanup-fotos-prueba.sql` en Supabase (Opción A vacía todas las fotos). El usuario pospuso esto a mañana
-3. **Verificar el cron de tasa BCV** corrió a las 8 AM hoy — ver en Vercel → Logs filtrar `/api/cron/tasa-bcv`. Debería haber insertado una nueva fila en `tasa_bcv`
-4. **Subir fotos reales a las propiedades** desde la cuenta del propietario y probar el carousel del marketplace en vivo
-5. **Plan de piloto en Caracas** — 10 candidatos + outreach
-6. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC)
-7. **Subir DMARC** a `p=quarantine` cuando lleve 1-2 semanas en `p=none`
-8. **(Crecimiento)** Aplicar formato VE (`Bs. 61.260,00`) en `/pagar`, `/recibos`, `/cobros`, `/propietario` — hoy solo está en el dashboard
-9. **(Crecimiento)** Match biométrico con face-api.js o AWS Rekognition
-10. **(Crecimiento)** Crear `privacidad@renttove.com` como inbox real
+### Verificaciones inmediatas (5-30 min — 15 may)
+1. **Cron BCV**: después de las 8 AM VE correr en Supabase
+   ```sql
+   SELECT * FROM tasa_bcv ORDER BY created_at DESC LIMIT 3;
+   ```
+   Si entra una fila nueva → fix exitoso. Si no → revisar env vars Vercel
+2. **Validación end-to-end en producción** (2 cuentas):
+   - Cuenta A configura un método de cobro (pago móvil) en /metodos-pago
+   - Cuenta A publica una propiedad de prueba
+   - Cuenta B la explora → "Consultar" → mensajería interna funciona
+   - Cuenta B se vincula con código
+   - Cuenta B paga: ve datos del propietario + código `R-XXXXXX`, copia todo, sube comprobante
+   - Cuenta A busca por código en /cobros → match instantáneo → confirma
+   - Email llega a ambas partes
+   Si todo pasa → app lista para invitar piloto
+
+### Críticas para piloto (por impacto)
+3. **Plan de piloto en Caracas** — 10 candidatos definidos + guión de outreach + checklist de onboarding. Wait list ya está, faltan los contactos reales
+4. **Búsqueda con mapa** en `/propiedades` — geo + filtros visuales. Hoy es lista plana
+5. **Sistema de disputas / reportes** — flujo cuando alguien no paga en modo Protegido/Premium
+6. **Onboarding del propietario** — wizard de 3 pasos para publicar primera propiedad
+7. **Arquitectura de reseñas bidireccionales** — schema + flujo, sin data aún
+8. **Fix chico**: trigger `notif_pago_insertado` debería incluir `codigo_rentto` en el cuerpo de la notificación. Hoy solo dice monto/método
+
+### Mejoras post-piloto
+9. **Confirmación automática del pago (Fase 2)** — Binance Pay webhook o parsing de emails bancarios
+10. **Match biométrico KYC** — face-api.js vs AWS Rekognition. Spike + decisión
+11. **Limpiar fotos de prueba** — `supabase-cleanup-fotos-prueba.sql`
+12. **Subir fotos reales a las propiedades** y probar carousel en vivo
+13. **Probar email real** desde producción a Gmail externo (validar SPF/DKIM/DMARC)
+14. **Subir DMARC** a `p=quarantine` cuando lleve 1-2 semanas en `p=none`
+15. **Custodia/Escrow real (Escenario 3)** — bloqueado por entidad legal pendiente
