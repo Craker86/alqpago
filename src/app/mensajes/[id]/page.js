@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { enviarNotificacion } from "../../lib/notificar";
 import { useConversacion } from "../../lib/useConversacion";
 import { marcarLeidos } from "../../lib/conversaciones";
 import { ArrowLeft, Home, ShieldCheck } from "lucide-react";
@@ -210,18 +211,14 @@ async function enviarEmailMensaje(destinatarioId, mensaje, propiedad) {
     .eq("id", session.user.id)
     .maybeSingle();
 
-  fetch("/api/notificar", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      tipo: "mensaje_recibido",
-      email: dest.email,
-      data: {
-        autor_nombre: autorPerfil?.nombre || "alguien",
-        propiedad_nombre: propiedad?.nombre || "una propiedad",
-        preview: mensaje.contenido.slice(0, 140),
-        conversacion_id: mensaje.conversacion_id,
-      },
-    }),
+  enviarNotificacion({
+    tipo: "mensaje_recibido",
+    email: dest.email,
+    data: {
+      autor_nombre: autorPerfil?.nombre || "alguien",
+      propiedad_nombre: propiedad?.nombre || "una propiedad",
+      preview: mensaje.contenido.slice(0, 140),
+      conversacion_id: mensaje.conversacion_id,
+    },
   }).catch(() => {});
 }

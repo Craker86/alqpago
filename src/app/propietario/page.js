@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import { enviarNotificacion } from "../lib/notificar";
 import Link from "next/link";
 import {
   Pencil,
@@ -96,14 +97,10 @@ export default function Propietario() {
     if (!inquilino?.email) return;
     const emailOk = inquilino?.notif_prefs?.[tipo]?.email ?? true;
     if (!emailOk) return;
-    fetch("/api/notificar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tipo,
-        email: inquilino.email,
-        data: { monto: pago.monto, metodo: pago.metodo },
-      }),
+    enviarNotificacion({
+      tipo,
+      email: inquilino.email,
+      data: { monto: pago.monto, metodo: pago.metodo },
     }).catch(() => {});
   }
 
