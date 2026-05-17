@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import { enviarNotificacion } from "../lib/notificar";
 import { ArrowLeft, Home, KeyRound, Shield, ShieldCheck, ShieldPlus, CheckCircle2, AlertTriangle } from "lucide-react";
 import { calcularScore, toneDeModo as toneDeScore } from "../lib/scoring";
 import { getModo, toneDeModo } from "../lib/modos";
@@ -125,17 +126,13 @@ function VincularInner() {
         ]);
         const emailOk = propPerfil?.notif_prefs?.inquilino_vinculado?.email ?? true;
         if (emailOk) {
-          fetch("/api/notificar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              tipo: "vinculacion_nueva",
-              email: propiedad.propietario_email,
-              data: {
-                inquilino_nombre: miPerfil?.nombre || "Un inquilino",
-                propiedad_nombre: propiedad.nombre,
-              },
-            }),
+          enviarNotificacion({
+            tipo: "vinculacion_nueva",
+            email: propiedad.propietario_email,
+            data: {
+              inquilino_nombre: miPerfil?.nombre || "Un inquilino",
+              propiedad_nombre: propiedad.nombre,
+            },
           }).catch(() => {});
         }
       }

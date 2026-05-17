@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { enviarNotificacion } from "../../lib/notificar";
 import {
   ArrowLeft,
   ShieldCheck,
@@ -146,14 +147,10 @@ export default function AdminVerificaciones() {
       const emailOk = destPerfil?.notif_prefs?.[tipoEvento]?.email ?? true;
 
       if (emailOk) {
-        fetch("/api/notificar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tipo: tipoEvento,
-            email: fila.perfil.email,
-            data: { nota: nota || "" },
-          }),
+        enviarNotificacion({
+          tipo: tipoEvento,
+          email: fila.perfil.email,
+          data: { nota: nota || "" },
         }).catch(() => {});
       }
     }

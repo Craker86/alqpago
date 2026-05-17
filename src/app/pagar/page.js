@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import { enviarNotificacion } from "../lib/notificar";
 import { formatBs, formatUsd, formatTasa, tiempoRelativo } from "../lib/format";
 import { METODOS, getMetodoMeta, obtenerMetodosCobroActivos } from "../lib/metodosCobro";
 import {
@@ -173,19 +174,15 @@ export default function Pagar() {
         .single();
       const emailOk = propPerfil?.notif_prefs?.pago_recibido?.email ?? true;
       if (emailOk) {
-        fetch("/api/notificar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tipo: "pago_creado",
-            email: propiedad.propietario_email,
-            data: {
-              monto: propiedad.monto_mensual,
-              metodo: metodoMeta?.nombre || metodoSeleccionado,
-              fecha: new Date().toLocaleDateString("es-VE"),
-              codigo: nuevoPago?.codigo_rentto || codigoRentto,
-            },
-          }),
+        enviarNotificacion({
+          tipo: "pago_creado",
+          email: propiedad.propietario_email,
+          data: {
+            monto: propiedad.monto_mensual,
+            metodo: metodoMeta?.nombre || metodoSeleccionado,
+            fecha: new Date().toLocaleDateString("es-VE"),
+            codigo: nuevoPago?.codigo_rentto || codigoRentto,
+          },
         }).catch(() => {});
       }
     }

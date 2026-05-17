@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import { enviarNotificacion } from "../lib/notificar";
 import { formatUsd } from "../lib/format";
 import {
   ArrowLeft,
@@ -142,14 +143,10 @@ export default function Cobros() {
         .single();
       const emailOk = prefs?.notif_prefs?.[tipo]?.email ?? true;
       if (emailOk) {
-        fetch("/api/notificar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tipo,
-            email: pago.inquilino.email,
-            data: { monto: pago.monto, metodo: pago.metodo },
-          }),
+        enviarNotificacion({
+          tipo,
+          email: pago.inquilino.email,
+          data: { monto: pago.monto, metodo: pago.metodo },
         }).catch(() => {});
       }
     }
